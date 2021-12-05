@@ -74,8 +74,10 @@ class PrimarySyncedRocksDBDict(RocksDBDict[K, V]):
             raise KeyError(key)
         return self.deser_value(item)
 
-    def set(self, key: K, value: V):
-        self[key] = value
+    def raw_set(self, key: bytes, value: bytes):
+        self.db.put(key, value)
+        if self.enable_bloomfilter:
+            self.bloomfilter.add(key)
 
 
 class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
@@ -126,7 +128,7 @@ class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
         return self.primary.raw_get(serkey)
 
     def __setitem__(self, key: K, value: V):
-        self.primary.set(key, value)
+        self.primary.raw_set(self.ser_key(key), self.ser_value(value))
 
     def __delitem__(self, key: K):
         raise NotImplementedError(
