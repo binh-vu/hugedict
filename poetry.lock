@@ -1,0 +1,42 @@
+[[package]]
+name = "lbry-rocksdb-optimized"
+version = "0.8.1"
+description = "Python bindings for RocksDB"
+category = "main"
+optional = false
+python-versions = ">=3.7.0"
+
+[package.extras]
+doc = ["sphinx-rtd-theme", "sphinx"]
+
+[[package]]
+name = "pybloomfiltermmap3"
+version = "0.5.5"
+description = "A fast implementation of Bloom filter for Python 3 built on mmap"
+category = "main"
+optional = false
+python-versions = ">=3.5, <4"
+
+[metadata]
+lock-version = "1.1"
+python-versions = "^3.8"
+content-hash = "2aebd5b1814f5c2a156b16dedd33f404cbef5093a37dd49354ce2a70177d3216"
+
+[metadata.files]
+lbry-rocksdb-optimized = [
+    {file = "lbry_rocksdb_optimized-0.8.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:67946d1c8cdf4ea492f3196a364dd6df4bfa443b0750645b98fdaeebcf848ca2"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:4d82c2ad55b51e8d1d26c09140f69ebcb541c27cb4bdd63c857754e5b7a2c44b"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp37-cp37m-manylinux_2_24_x86_64.whl", hash = "sha256:f6e843707c36f3b4c5078b09b2937900e59c554aafc93b48c79a6fb68eaddeec"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:85c460741aad1393949e9779fd3b76dde094cb2b925d9351edfef76240799a60"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:31e3477b4e4dd12909c8dc60e881fd24c6349b283b98c1c73d3b313a52fa0cf8"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp38-cp38-manylinux_2_24_x86_64.whl", hash = "sha256:f396c2af130a740a6ffdde68079ed6d03425b7751697f3e4ea67a0d193cf3f4a"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:5a91c29ff4dbbee262aa4f455e271f6bcb6c98ff8b28566dd30b4b87a981b441"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0742c85d96ade0ce89743619e8f8c77a93447a5c701133fa60c093fd424d57e8"},
+    {file = "lbry_rocksdb_optimized-0.8.1-cp39-cp39-manylinux_2_24_x86_64.whl", hash = "sha256:46262dcee200d21498cec54e03b3816cb751dee4d774803184b874d9883c4199"},
+    {file = "lbry_rocksdb_optimized-0.8.1-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_24_x86_64.whl", hash = "sha256:8fa6ad0ae4e261206bbd7b415c633ad28b4416f7620c11e6f8e24bd909d5aabc"},
+    {file = "lbry_rocksdb_optimized-0.8.1-pp37-pypy37_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:65e058b24fd5addb1152257e44b043719f3fca1e72e99c34e6ac2df34a7af57a"},
+    {file = "lbry_rocksdb_optimized-0.8.1-pp37-pypy37_pp73-manylinux_2_24_x86_64.whl", hash = "sha256:3b9e57a5a3a440cef08a0580f87589a90db131eb4609e30d9d15c7b921e9a468"},
+]
+pybloomfiltermmap3 = [
+    {file = "pybloomfiltermmap3-0.5.5.tar.gz", hash = "sha256:1b76bf29694cee4b50e582eb6ee4e3d293793e61ba7dde2b8843e29d04c865a4"},
+]
