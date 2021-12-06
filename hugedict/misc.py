@@ -1,8 +1,5 @@
-from functools import partial
 import gzip
 import pickle
-
-from hugedict.rocksdb import RocksDBDict
 
 
 def identity(x):
@@ -10,7 +7,7 @@ def identity(x):
 
 
 def compress_pyobject(x):
-    return gzip.compress(pickle.dumps(x))
+    return gzip.compress(pickle.dumps(x), mtime=0)
 
 
 def decompress_pyobject(x):

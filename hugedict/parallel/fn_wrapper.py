@@ -1,4 +1,5 @@
 from multiprocessing import Pool
+from typing import Optional, Type
 import orjson
 import gzip
 from inspect import signature
@@ -45,6 +46,31 @@ class SecondaryRocksDBCacheFn:
 
     def run(self, *args, **kwargs):
         key = orjson.dumps((self.fn_name, args, kwargs))
+
+        if key not in self.db:
+            output = self.fn(*args, **kwargs)
+            self.db[key] = output
+            return output
+
+        return self.db[key]
+
+
+class LazyRocksDBCacheFn:
+    def __init__(
+        self, db_class: Type[RocksDBDict], db_args: dict, fn: Fn, namespace: str = ""
+    ):
+        self.db_class = db_class
+        self.db_args = db_args
+        self.db: Optional[RocksDBDict] = None
+        self.namespace = namespace
+
+        self.fn = fn
+        self.fn_name = fn.__name__
+
+    def run(self, *args, **kwargs):
+        key = orjson.dumps((self.fn_name, args, kwargs))
+        if self.db is None:
+            self.db = self.db_class(**self.db_args)
 
         if key not in self.db:
             output = self.fn(*args, **kwargs)
