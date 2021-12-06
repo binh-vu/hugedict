@@ -1,7 +1,7 @@
 from multiprocessing import Pool
 from typing import Optional, Type
 import orjson
-import gzip
+import inspect
 from inspect import signature
 from hugedict.mrsw_rocksdb import SecondarySyncedRocksDBDict
 from hugedict.rocksdb import RocksDBDict
@@ -13,7 +13,13 @@ class ParallelFnWrapper:
     def __init__(self, fn: Fn, ignore_error=False):
         self.fn = fn
         # method of instances won't have `self` parameter, so we do not need to worry about it
-        self.spread_fn_args = len(signature(fn).parameters) > 1
+        if hasattr(fn, "__self__") and isinstance(
+            fn.__self__, (SecondaryRocksDBCacheFn, LazyRocksDBCacheFn)
+        ):
+            fn_params = signature(fn.__self__.fn).parameters
+        else:
+            fn_params = signature(fn).parameters
+        self.spread_fn_args = len(fn_params) > 1
         self.ignore_error = ignore_error
 
     def run(self, args):
@@ -24,6 +30,20 @@ class ParallelFnWrapper:
             else:
                 r = self.fn(r)
             return idx, r
+        except:
+            logger.error(f"[ParallelMap] Error while process item {idx}")
+            if self.ignore_error:
+                return idx, None
+            raise
+
+    def run_no_return(self, args):
+        idx, r = args
+        try:
+            if self.spread_fn_args:
+                r = self.fn(*r)
+            else:
+                r = self.fn(r)
+            return idx, None
         except:
             logger.error(f"[ParallelMap] Error while process item {idx}")
             if self.ignore_error:

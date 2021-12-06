@@ -1,9 +1,19 @@
+from abc import ABC, abstractmethod
 import os
 from pathlib import Path
 import pickle
-from typing import Callable, Dict, Iterator, NamedTuple, TypeVar, Union, MutableMapping
+from typing import (
+    Callable,
+    Dict,
+    Iterator,
+    NamedTuple,
+    Optional,
+    TypeVar,
+    Union,
+    MutableMapping,
+)
 from hugedict.rocksdb import RocksDBDict
-from hugedict.types import K, V
+from hugedict.types import K, V, InvalidUsageError
 from pybloomfilter import BloomFilter
 
 
@@ -13,7 +23,21 @@ BloomFilterArgs = NamedTuple(
 DEFAULT_BLOOMFILTER_ARGS = (int(1e6), 0.001)
 
 
-class PrimarySyncedRocksDBDict(RocksDBDict[K, V]):
+class IProxyDict(ABC):
+    @abstractmethod
+    def raw_has(self, key: bytes) -> bool:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def raw_get(self, key: bytes) -> Optional[bytes]:
+        raise NotImplementedError()
+
+    @abstractmethod
+    def raw_set(self, key: bytes, value: bytes):
+        raise NotImplementedError()
+
+
+class PrimarySyncedRocksDBDict(RocksDBDict[K, V], IProxyDict):
     def __init__(
         self,
         dbpath: Union[Path, str],
@@ -64,15 +88,11 @@ class PrimarySyncedRocksDBDict(RocksDBDict[K, V]):
             self.bloomfilter.remove(serkey)
         return self.deser_value(item)
 
-    # extra method for proxy & secondary
     def raw_has(self, key: bytes) -> bool:
         return self.db.get(key) is not None
 
-    def raw_get(self, key: bytes) -> V:
-        item = self.db.get(key)
-        if item is None:
-            raise KeyError(key)
-        return self.deser_value(item)
+    def raw_get(self, key: bytes) -> Optional[bytes]:
+        return self.db.get(key)
 
     def raw_set(self, key: bytes, value: bytes):
         self.db.put(key, value)
@@ -83,14 +103,13 @@ class PrimarySyncedRocksDBDict(RocksDBDict[K, V]):
 class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
     def __init__(
         self,
-        primary: PrimarySyncedRocksDBDict[K, V],
+        primary: IProxyDict,
         dbpath: Union[Path, str],
         secondary_name: str,
         deser_key: Callable[[bytes], K] = None,
         deser_value: Callable[[bytes], V] = None,
         ser_key: Callable[[K], bytes] = None,
         ser_value: Callable[[V], bytes] = None,
-        bloomfilter_args: BloomFilterArgs = None,
         enable_bloomfilter: bool = True,
     ):
         super().__init__(
@@ -105,9 +124,7 @@ class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
         )
 
         self.primary = primary
-
         # create a default of 1M keys
-        self.bloomfilter_args = bloomfilter_args or DEFAULT_BLOOMFILTER_ARGS
         self.enable_bloomfilter = enable_bloomfilter
         if self.enable_bloomfilter:
             self.bloomfilter = BloomFilter.open(
@@ -125,21 +142,22 @@ class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
             # can't find the key anywhere
             raise KeyError(key)
 
-        return self.primary.raw_get(serkey)
+        item = self.primary.raw_get(serkey)
+        if item is None:
+            raise KeyError(key)
+        return self.deser_value(item)
 
     def __setitem__(self, key: K, value: V):
         self.primary.raw_set(self.ser_key(key), self.ser_value(value))
 
     def __delitem__(self, key: K):
-        raise NotImplementedError(
-            "SecondarySyncedRocksDBDict does not support __delitem__"
-        )
+        raise InvalidUsageError()
 
     def __iter__(self) -> Iterator[K]:
-        return iter(self.primary)
+        raise InvalidUsageError()
 
     def __len__(self):
-        return len(self.primary)
+        raise InvalidUsageError()
 
     def __contains__(self, key):
         serkey = self.ser_key(key)
@@ -152,10 +170,10 @@ class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
         )
 
     def keys(self) -> Iterator[K]:
-        return self.primary.keys()
+        raise InvalidUsageError()
 
     def values(self) -> Iterator[V]:
-        return self.primary.values()
+        raise InvalidUsageError()
 
     def get(self, key: K, default=None):
         try:
@@ -164,6 +182,4 @@ class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
             return default
 
     def pop(self, key: K, default=None):
-        raise NotImplementedError(
-            "SecondarySyncedRocksDBDict does not support __delitem__"
-        )
+        raise InvalidUsageError()
