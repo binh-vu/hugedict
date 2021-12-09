@@ -1,8 +1,10 @@
 [tool.poetry]
 name = "hugedict"
-version = "1.0.2"
+version = "1.0.3"
 description = "A dictionary-like object that is friendly with multiprocessing and uses key-value databases (e.g., RocksDB) as the underlying storage."
 authors = ["Binh Vu <binh@toan2.com>"]
+homepage = "https://github.com/binh-vu/hugedict"
+repository = "https://github.com/binh-vu/hugedict"
 license = "MIT"
 
 [tool.poetry.dependencies]
