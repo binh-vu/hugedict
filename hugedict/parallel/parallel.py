@@ -11,7 +11,7 @@ from multiprocessing.pool import Pool, ThreadPool
 from multiprocessing.managers import BaseManager, SharedMemoryManager, SyncManager
 from operator import itemgetter
 import pickle
-from typing import Any, List, Optional, Union
+from typing import Any, Callable, List, Optional, Union
 from hugedict.mrsw_rocksdb import SecondarySyncedRocksDBDict
 from hugedict.parallel.fn_wrapper import (
     LazyRocksDBCacheFn,
@@ -230,6 +230,7 @@ class Parallel:
         dbpath: Union[Path, str],
         namespace: str = "",
         compress=Compressing.NoCompression,
+        key: Callable[[str, tuple, dict], bytes] = None,
     ):
         """Cache a function (only work when using with Parallel object)"""
         for cache in self._cache:
@@ -258,6 +259,7 @@ class Parallel:
                 ),
                 fn=func,
                 namespace=namespace,
+                key=key,
             )
 
             self._cache.append(cache)

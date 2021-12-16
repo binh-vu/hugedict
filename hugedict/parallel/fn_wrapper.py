@@ -1,5 +1,5 @@
 from multiprocessing import Pool
-from typing import Optional, Type
+from typing import Any, Callable, Optional, Type
 import orjson
 import inspect
 from inspect import signature
@@ -77,7 +77,12 @@ class SecondaryRocksDBCacheFn:
 
 class LazyRocksDBCacheFn:
     def __init__(
-        self, db_class: Type[RocksDBDict], db_args: dict, fn: Fn, namespace: str = ""
+        self,
+        db_class: Type[RocksDBDict],
+        db_args: dict,
+        fn: Fn,
+        namespace: str = "",
+        key: Callable[[str, tuple, dict], bytes] = None,
     ):
         self.db_class = db_class
         self.db_args = db_args
@@ -86,9 +91,10 @@ class LazyRocksDBCacheFn:
 
         self.fn = fn
         self.fn_name = fn.__name__
+        self.key = key or LazyRocksDBCacheFn.default_key
 
     def run(self, *args, **kwargs):
-        key = orjson.dumps((self.fn_name, args, kwargs))
+        key = self.key(self.fn_name, args, kwargs)
         if self.db is None:
             self.db = self.db_class(**self.db_args)
 
@@ -98,3 +104,7 @@ class LazyRocksDBCacheFn:
             return output
 
         return self.db[key]
+
+    @staticmethod
+    def default_key(fn_name, args, kwargs):
+        return orjson.dumps((fn_name, args, kwargs))
