@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 import pickle
 from typing import Callable, Dict, Iterator, TypeVar, Union, MutableMapping, cast
+from hugedict.cachedict import CacheDict
 from rocksdb import DB, Options  # type: ignore
 from pybloomfilter import BloomFilter
 from hugedict.types import K, V
@@ -114,3 +115,6 @@ class RocksDBDict(MutableMapping[K, V]):
 
     def open(self):
         self.db = DB(os.path.join(self.dbpath, "primary"), self.options, **self.kwargs)
+
+    def cache_dict(self):
+        return CacheDict(self)

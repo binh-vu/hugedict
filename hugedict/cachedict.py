@@ -1,6 +1,6 @@
 import os
 from typing import Iterator, KeysView, MutableMapping, ValuesView
-from hugedict.rocksdb import K, V
+from hugedict.types import K, V
 
 
 class CacheDict(MutableMapping[K, V]):
