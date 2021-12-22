@@ -120,8 +120,9 @@ class Parallel:
         """Execute a map function over each input in parallel"""
         with self.init_cache():
             if not is_parallel:
+                wrapped_fn = ParallelFnWrapper(fn, ignore_error=False).run
                 return [
-                    fn(item)
+                    wrapped_fn((0, item))[1]
                     for item in tqdm(
                         inputs,
                         total=len(inputs),
@@ -135,16 +136,16 @@ class Parallel:
                 with ThreadPool(processes=n_processes) as pool:
                     iter = pool.imap_unordered(
                         ParallelFnWrapper(fn, ignore_error).run,
-                        enumerate(
-                            tqdm(
-                                inputs,
-                                total=len(inputs),
-                                desc=progress_desc,
-                                disable=not show_progress,
-                            )
-                        ),
+                        enumerate(inputs),
                     )
-                    results = list(iter)
+                    results = []
+                    for result in tqdm(
+                        iter,
+                        total=len(inputs),
+                        desc=progress_desc,
+                        disable=not show_progress,
+                    ):
+                        results.append(result)
                     results.sort(key=itemgetter(0))
             else:
                 # have to switch to multi read single write mode
@@ -153,16 +154,16 @@ class Parallel:
                     with Pool(processes=n_processes) as pool:
                         iter = pool.imap_unordered(
                             ParallelFnWrapper(fn, ignore_error).run,
-                            enumerate(
-                                tqdm(
-                                    inputs,
-                                    total=len(inputs),
-                                    desc=progress_desc,
-                                    disable=not show_progress,
-                                )
-                            ),
+                            enumerate(inputs),
                         )
-                        results = list(iter)
+                        results = []
+                        for result in tqdm(
+                            iter,
+                            total=len(inputs),
+                            desc=progress_desc,
+                            disable=not show_progress,
+                        ):
+                            results.append(result)
                         results.sort(key=itemgetter(0))
 
         return [v for i, v in results]
@@ -195,16 +196,16 @@ class Parallel:
                 with ThreadPool(processes=n_processes) as pool:
                     iter = pool.imap_unordered(
                         ParallelFnWrapper(fn, ignore_error).run_no_return,
-                        enumerate(
-                            tqdm(
-                                inputs,
-                                total=len(inputs),
-                                desc=progress_desc,
-                                disable=not show_progress,
-                            )
-                        ),
+                        enumerate(inputs),
                     )
-                    results = list(iter)
+                    results = []
+                    for result in tqdm(
+                        iter,
+                        total=len(inputs),
+                        desc=progress_desc,
+                        disable=not show_progress,
+                    ):
+                        results.append(result)
                     return
 
             # have to switch to multi read single write mode
@@ -213,16 +214,16 @@ class Parallel:
                 with Pool(processes=n_processes) as pool:
                     iter = pool.imap_unordered(
                         ParallelFnWrapper(fn, ignore_error).run_no_return,
-                        enumerate(
-                            tqdm(
-                                inputs,
-                                total=len(inputs),
-                                desc=progress_desc,
-                                disable=not show_progress,
-                            )
-                        ),
+                        enumerate(inputs),
                     )
-                    results = list(iter)
+                    results = []
+                    for result in tqdm(
+                        iter,
+                        total=len(inputs),
+                        desc=progress_desc,
+                        disable=not show_progress,
+                    ):
+                        results.append(result)
                     return
 
     def cache_func(
