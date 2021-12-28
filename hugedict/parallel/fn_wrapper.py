@@ -90,7 +90,9 @@ class LazyRocksDBCacheFn:
         self.namespace = namespace
 
         self.fn = fn
-        self.fn_name = fn.__name__
+        self.fn_name = (
+            namespace + ":" + fn.__name__ if len(namespace) > 0 else fn.__name__
+        )
         self.key = key or LazyRocksDBCacheFn.default_key
 
     def run(self, *args, **kwargs):
