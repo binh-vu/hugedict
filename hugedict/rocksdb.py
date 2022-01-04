@@ -50,7 +50,6 @@ class RocksDBDict(MutableMapping[K, V]):
 
         self.dbpath = dbpath
         Path(self.dbpath).mkdir(exist_ok=True, parents=True)
-        print(self.dbpath)
         self.db_options = db_options
         self.kwargs = kwargs
         self.db = DB(
