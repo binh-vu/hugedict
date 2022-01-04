@@ -1,14 +1,23 @@
 import functools
 import gzip
+import threading
 import zstandard as zstd
 import pickle
 from typing import Any, Callable
 from hugedict.types import T
 
 
-zstd_3_compressor = zstd.ZstdCompressor(level=3)
-zstd_6_compressor = zstd.ZstdCompressor(level=6)
-zstd_decompressor = zstd.ZstdDecompressor()
+container = threading.local()
+container.zstd_3_compressor = zstd.ZstdCompressor(level=3)
+container.zstd_6_compressor = zstd.ZstdCompressor(level=6)
+container.zstd_decompressor = zstd.ZstdDecompressor()
+
+
+def init_container(container):
+    if not hasattr(container, "zstd_decompressor"):
+        container.zstd_3_compressor = zstd.ZstdCompressor(level=3)
+        container.zstd_6_compressor = zstd.ZstdCompressor(level=6)
+        container.zstd_decompressor = zstd.ZstdDecompressor()
 
 
 def identity(x):
@@ -24,27 +33,39 @@ def decompress_pyobject(x):
 
 
 def zstd3_compress(x):
-    return zstd_3_compressor.compress(x)
+    global container
+    init_container(container)
+    return container.zstd_3_compressor.compress(x)
 
 
 def zstd6_compress(x):
-    return zstd_6_compressor.compress(x)
+    global container
+    init_container(container)
+    return container.zstd_6_compressor.compress(x)
 
 
 def zstd_decompress(x):
-    return zstd_decompressor.decompress(x)
+    global container
+    init_container(container)
+    return container.zstd_decompressor.decompress(x)
 
 
 def compress_zstd3_pyobject(x):
-    return zstd_3_compressor.compress(pickle.dumps(x))
+    global container
+    init_container(container)
+    return container.zstd_3_compressor.compress(pickle.dumps(x))
 
 
 def compress_zstd6_pyobject(x):
-    return zstd_6_compressor.compress(pickle.dumps(x))
+    global container
+    init_container(container)
+    return container.zstd_6_compressor.compress(pickle.dumps(x))
 
 
 def decompress_zstd_pyobject(x):
-    return pickle.loads(zstd_decompressor.decompress(x))
+    global container
+    init_container(container)
+    return pickle.loads(container.zstd_decompressor.decompress(x))
 
 
 def compress_custom(ser_fn: Callable[[T], bytes]) -> Callable[[T], bytes]:
@@ -66,7 +87,9 @@ def decompress_custom(deser_fn: Callable[[bytes], T]) -> Callable[[bytes], T]:
 def zstd3_compress_custom(ser_fn: Callable[[T], bytes]) -> Callable[[T], bytes]:
     @functools.wraps(ser_fn)
     def wrapper(x):
-        return zstd_3_compressor.compress(ser_fn(x))
+        global container
+        init_container(container)
+        return container.zstd_3_compressor.compress(ser_fn(x))
 
     return wrapper
 
@@ -74,7 +97,9 @@ def zstd3_compress_custom(ser_fn: Callable[[T], bytes]) -> Callable[[T], bytes]:
 def zstd6_compress_custom(ser_fn: Callable[[T], bytes]) -> Callable[[T], bytes]:
     @functools.wraps(ser_fn)
     def wrapper(x):
-        return zstd_6_compressor.compress(ser_fn(x))
+        global container
+        init_container(container)
+        return container.zstd_6_compressor.compress(ser_fn(x))
 
     return wrapper
 
@@ -82,7 +107,9 @@ def zstd6_compress_custom(ser_fn: Callable[[T], bytes]) -> Callable[[T], bytes]:
 def zstd_decompress_custom(deser_fn: Callable[[bytes], T]) -> Callable[[bytes], T]:
     @functools.wraps(deser_fn)
     def wrapper(x):
-        return deser_fn(zstd_decompressor.decompress(x))
+        global container
+        init_container(container)
+        return deser_fn(container.zstd_decompressor.decompress(x))
 
     return wrapper
 
