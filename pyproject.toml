@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "hugedict"
-version = "1.0.3"
+version = "1.1.0"
 description = "A dictionary-like object that is friendly with multiprocessing and uses key-value databases (e.g., RocksDB) as the underlying storage."
 authors = ["Binh Vu <binh@toan2.com>"]
 homepage = "https://github.com/binh-vu/hugedict"
@@ -8,9 +8,10 @@ repository = "https://github.com/binh-vu/hugedict"
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 lbry-rocksdb-optimized = "^0.8.1"
 pybloomfiltermmap3 = "^0.5.5"
+zstandard = "^0.16.0"
 
 [tool.poetry.dev-dependencies]
 

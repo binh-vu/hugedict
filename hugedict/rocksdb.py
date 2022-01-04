@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 import pickle
-from typing import Callable, Dict, Iterator, TypeVar, Union, MutableMapping, cast
+from typing import Any, Callable, Dict, Iterator, TypeVar, Union, MutableMapping, cast
 from hugedict.cachedict import CacheDict
 from rocksdb import DB, Options  # type: ignore
 from pybloomfilter import BloomFilter
@@ -33,9 +33,11 @@ class RocksDBDict(MutableMapping[K, V]):
         deser_value: Callable[[bytes], V] = None,
         ser_key: Callable[[K], bytes] = None,
         ser_value: Callable[[V], bytes] = None,
+        db_options: Dict[str, Any] = None,
     ):
-        options = Options()
-        options.create_if_missing = create_if_missing
+        if db_options is None:
+            db_options = {}
+        db_options["create_if_missing"] = create_if_missing
         kwargs = dict(read_only=read_only)
 
         if secondary_name is not None:
@@ -43,14 +45,17 @@ class RocksDBDict(MutableMapping[K, V]):
                 raise ValueError("secondary_name cannot be 'primary'")
 
             # required to open as secondary instance
-            options.max_open_files = -1
+            db_options["max_open_files"] = -1
             kwargs["secondary_name"] = os.path.join(dbpath, secondary_name)
 
         self.dbpath = dbpath
         Path(self.dbpath).mkdir(exist_ok=True, parents=True)
-        self.options = options
+        print(self.dbpath)
+        self.db_options = db_options
         self.kwargs = kwargs
-        self.db = DB(os.path.join(dbpath, "primary"), options, **kwargs)
+        self.db = DB(
+            os.path.join(dbpath, "primary"), Options(**self.db_options), **kwargs
+        )
         self.secondary_name = secondary_name
         self.is_primary = secondary_name is None
 
@@ -114,7 +119,11 @@ class RocksDBDict(MutableMapping[K, V]):
         del self.db
 
     def open(self):
-        self.db = DB(os.path.join(self.dbpath, "primary"), self.options, **self.kwargs)
+        self.db = DB(
+            os.path.join(self.dbpath, "primary"),
+            Options(**self.db_options),
+            **self.kwargs
+        )
 
     def cache_dict(self):
         return CacheDict(self)
