@@ -17,7 +17,13 @@ from hugedict.parallel.fn_wrapper import (
     LazyRocksDBCacheFn,
     ParallelFnWrapper,
 )
-from hugedict.misc import identity, compress_pyobject, decompress_pyobject
+from hugedict.misc import (
+    compress_zstd6_pyobject,
+    decompress_zstd_pyobject,
+    identity,
+    compress_pyobject,
+    decompress_pyobject,
+)
 from hugedict.parallel.manager import (
     MB,
     MyManager,
@@ -244,7 +250,10 @@ class Parallel:
                 ser_key, deser_key = identity, identity
 
             if compress & Compressing.CompressValue:
-                ser_value, deser_value = compress_pyobject, decompress_pyobject
+                ser_value, deser_value = (
+                    compress_zstd6_pyobject,
+                    decompress_zstd_pyobject,
+                )
             else:
                 ser_value, deser_value = pickle.dumps, pickle.loads
 

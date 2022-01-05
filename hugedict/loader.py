@@ -141,8 +141,8 @@ def read_file(args: FileReaderArgs) -> int:
             raise Exception(f"Unknown format: {format}")
 
     shm_idx = None
-    # wait for max 5minutes for shared memory to be available
-    for j in range(300):
+    # wait for max 10 minutes for shared memory to be available
+    for j in range(600):
         for i in range(len(args.shm_pool)):
             if args.shm_reserved[i]:
                 continue
