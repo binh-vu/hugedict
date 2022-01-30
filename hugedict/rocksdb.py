@@ -1,7 +1,17 @@
 import os
 from pathlib import Path
 import pickle
-from typing import Any, Callable, Dict, Iterator, TypeVar, Union, MutableMapping, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterator,
+    Optional,
+    TypeVar,
+    Union,
+    MutableMapping,
+    cast,
+)
 from hugedict.cachedict import CacheDict
 from rocksdb import DB, Options  # type: ignore
 from pybloomfilter import BloomFilter
@@ -99,7 +109,7 @@ class RocksDBDict(MutableMapping[K, V]):
         it.seek_to_first()
         return (self.deser_value(value) for value in it)
 
-    def get(self, key: K, default=None):
+    def get(self, key: K, default: Optional[V] = None):
         item = self.db.get(self.ser_key(key))
         if item is None:
             return default
