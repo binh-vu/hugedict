@@ -30,7 +30,7 @@ from hugedict.parallel.manager import (
     SharedMemoryDictClient,
 )
 from hugedict.rocksdb import RocksDBDict
-from hugedict.types import Fn
+from hugedict.types import F, Fn
 from loguru import logger
 from tqdm import tqdm
 
@@ -238,7 +238,7 @@ class Parallel:
         namespace: str = "",
         compress=Compressing.NoCompression,
         key: Callable[[str, tuple, dict], bytes] = None,
-    ):
+    ) -> Callable[[F], F]:
         """Cache a function (only work when using with Parallel object)"""
         for cache in self._cache:
             assert cache.db_args["dbpath"] != dbpath, "dbpath must be unique"
