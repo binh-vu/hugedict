@@ -37,18 +37,18 @@ class RocksDBDict(MutableMapping[K, V]):
         self,
         dbpath: Union[Path, str],
         create_if_missing=False,
-        secondary_name: str = None,
+        secondary_name: Optional[str] = None,
         read_only=False,
-        deser_key: Callable[[bytes], K] = None,
-        deser_value: Callable[[bytes], V] = None,
-        ser_key: Callable[[K], bytes] = None,
-        ser_value: Callable[[V], bytes] = None,
-        db_options: Dict[str, Any] = None,
+        deser_key: Optional[Callable[[bytes], K]] = None,
+        deser_value: Optional[Callable[[bytes], V]] = None,
+        ser_key: Optional[Callable[[K], bytes]] = None,
+        ser_value: Optional[Callable[[V], bytes]] = None,
+        db_options: Optional[Dict[str, Any]] = None,
     ):
         if db_options is None:
             db_options = {}
         db_options["create_if_missing"] = create_if_missing
-        kwargs = dict(read_only=read_only)
+        kwargs: Dict[str, Any] = dict(read_only=read_only)
 
         if secondary_name is not None:
             if secondary_name == "primary":

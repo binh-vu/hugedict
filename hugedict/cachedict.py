@@ -1,6 +1,7 @@
 import os
 from typing import Iterator, KeysView, MutableMapping, ValuesView
 from hugedict.types import K, V
+from copy import copy
 
 
 class CacheDict(MutableMapping[K, V]):
@@ -42,3 +43,11 @@ class CacheDict(MutableMapping[K, V]):
         if key in self.cache:
             return self.cache[key]
         return self.mapping.get(key, default)
+
+    def cache_dict(self) -> "CacheDict":
+        """Return a clone of this object so that subsequence cache won't affect this object.
+        Using the name cache_dict, so that it can be mixed with existing object providing cache_dict such as RocksDBDict
+        """
+        cache = CacheDict(self.mapping)
+        cache.cache = copy(self.cache)
+        return cache
