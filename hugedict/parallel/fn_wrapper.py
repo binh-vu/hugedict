@@ -82,7 +82,7 @@ class LazyRocksDBCacheFn:
         db_args: dict,
         fn: Fn,
         namespace: str = "",
-        key: Callable[[str, tuple, dict], bytes] = None,
+        key: Optional[Callable[[str, tuple, dict], bytes]] = None,
     ):
         self.db_class = db_class
         self.db_args = db_args

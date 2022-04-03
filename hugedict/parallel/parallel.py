@@ -237,13 +237,13 @@ class Parallel:
         dbpath: Union[Path, str],
         namespace: str = "",
         compress=Compressing.NoCompression,
-        key: Callable[[str, tuple, dict], bytes] = None,
+        key: Optional[Callable[[str, tuple, dict], bytes]] = None,
     ) -> Callable[[F], F]:
         """Cache a function (only work when using with Parallel object)"""
         for cache in self._cache:
             assert cache.db_args["dbpath"] != dbpath, "dbpath must be unique"
 
-        def wrapper_fn(func):
+        def wrapper_fn(func: F) -> F:
             if compress & Compressing.CompressKey:
                 ser_key, deser_key = compress_pyobject, decompress_pyobject
             else:
@@ -273,6 +273,6 @@ class Parallel:
             )
 
             self._cache.append(cache)
-            return cache.run
+            return cache.run  # type: ignore
 
         return wrapper_fn
