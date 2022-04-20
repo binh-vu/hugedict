@@ -10,7 +10,7 @@ from pathlib import Path
 import orjson
 from rocksdb import DB, WriteBatch  # type: ignore
 from enum import Enum
-from typing import Any, Callable, List, Optional, Tuple, cast
+from typing import Any, Callable, List, Optional, Tuple, Union, cast
 from multiprocessing.managers import SharedMemoryManager, SyncManager
 from multiprocessing.shared_memory import SharedMemory, ShareableList
 from multiprocessing import Lock, Pool, Queue, Process
@@ -36,6 +36,36 @@ class FileReaderArgs:
 def init_pool(l):
     global lock
     lock = l
+
+
+def load_single_file(
+    db: DB,
+    infile: Union[str, Path],
+    format: FileFormat,
+    key_fn: Callable[[Any], bytes],
+    value_fn: Callable[[Any], bytes],
+    verbose: bool = True,
+):
+    args = FileReaderArgs(
+        infile=Path(infile),
+        format=format,
+        key_fn=key_fn,
+        value_fn=value_fn,
+        shm_pool=[],
+        shm_reserved=None,  # type: ignore
+    )
+    lst = read_file(args)
+    batch_size = 100000
+
+    wb = WriteBatch()
+    for k, v in tqdm(lst, desc="writing", disable=not verbose):
+        wb.put(k, v)
+        if wb.count() >= batch_size:
+            db.write(wb, disable_wal=True)
+            wb = WriteBatch()
+    if wb.count() > 0:
+        db.write(wb, disable_wal=True)
+    return db
 
 
 def load(
@@ -82,7 +112,7 @@ def load(
                 for infile in infiles
             ]
             n_records = 0
-            for shm_index in pool.imap_unordered(read_file, inputs):
+            for shm_index in pool.imap_unordered(process_fn, inputs):
                 if not shm_reserved[shm_index]:
                     raise Exception(f"Shared memory {shm_index} not reserved")
 
@@ -112,33 +142,9 @@ def load(
     return db
 
 
-def read_file(args: FileReaderArgs) -> int:
+def process_fn(args: FileReaderArgs) -> int:
     """Read file and write list of key-value pairs to shared memory"""
-    if args.infile.name.endswith(".gz"):
-        open_fn = gzip.open
-    elif args.infile.name.endswith(".bz2"):
-        open_fn = bz2.open
-    else:
-        open_fn = open
-
-    with open_fn(str(args.infile), "rb") as f:
-        key = args.key_fn
-        value = args.value_fn
-        outputs = []
-        if args.format == FileFormat.jsonline:
-            for line in f:
-                r = orjson.loads(line)
-                outputs.append((key(r), value(r)))
-        elif args.format == FileFormat.tuple2:
-            for line in f:
-                k, v = orjson.loads(line)
-                outputs.append((key(k), value(v)))
-        elif args.format == FileFormat.tabsep:
-            for line in f:
-                k, v = line.split(b"\t", 1)
-                outputs.append((key(k), value(v)))
-        else:
-            raise Exception(f"Unknown format: {format}")
+    outputs = read_file(args)
 
     shm_idx = None
     # wait for max 10 minutes for shared memory to be available
@@ -168,6 +174,35 @@ def read_file(args: FileReaderArgs) -> int:
     # write_to_shm(args.shm_pool[shm_idx], outputs)
     write_to_shm_writebatch(args.shm_pool[shm_idx], outputs)
     return shm_idx
+
+
+def read_file(args: FileReaderArgs) -> List[Tuple[bytes, bytes]]:
+    if args.infile.name.endswith(".gz"):
+        open_fn = gzip.open
+    elif args.infile.name.endswith(".bz2"):
+        open_fn = bz2.open
+    else:
+        open_fn = open
+
+    with open_fn(str(args.infile), "rb") as f:
+        key = args.key_fn
+        value = args.value_fn
+        outputs = []
+        if args.format == FileFormat.jsonline:
+            for line in f:
+                r = orjson.loads(line)
+                outputs.append((key(r), value(r)))
+        elif args.format == FileFormat.tuple2:
+            for line in f:
+                k, v = orjson.loads(line)
+                outputs.append((key(k), value(v)))
+        elif args.format == FileFormat.tabsep:
+            for line in f:
+                k, v = line.split(b"\t", 1)
+                outputs.append((key(k), value(v)))
+        else:
+            raise Exception(f"Unknown format: {format}")
+    return outputs
 
 
 def write_to_shm_writebatch(shm: SharedMemory, lst: List[Tuple[bytes, bytes]]):
