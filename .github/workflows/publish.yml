@@ -17,7 +17,7 @@ jobs:
           pip install poetry twine
           poetry install
       - name: run test
-        run: poetry run pytest -x
+        run: poetry run pytest -x tests
       - name: publish
         # use twine for now as poetry hasn't released --skip-existing option yet
         # run: poetry publish --build --username $PYPI_USER --password $PYPI_PWD
