@@ -1,0 +1,29 @@
+name: publish
+on:
+  push:
+    branches:
+      - master
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: setup python
+        uses: actions/setup-python@v3.1.0
+        with:
+          python-version: 3.8
+      - name: setup dependencies
+        run: |
+          pip install poetry twine
+          poetry install
+      - name: run test
+        run: poetry run pytest -x
+      - name: publish
+        # use twine for now as poetry hasn't released --skip-existing option yet
+        # run: poetry publish --build --username $PYPI_USER --password $PYPI_PWD
+        run: |
+          poetry build
+          twine upload --skip-existing dist/* -u $PYPI_USER -p $PYPI_PWD
+        env:
+          PYPI_USER: __token__
+          PYPI_PWD: ${{ secrets.PYPI_TOKEN }}

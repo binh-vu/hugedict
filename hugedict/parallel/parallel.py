@@ -128,9 +128,9 @@ class Parallel:
             if not is_parallel:
                 wrapped_fn = ParallelFnWrapper(fn, ignore_error=False).run
                 return [
-                    wrapped_fn((0, item))[1]
-                    for item in tqdm(
-                        inputs,
+                    wrapped_fn((i, item))[1]
+                    for i, item in tqdm(
+                        enumerate(inputs),
                         total=len(inputs),
                         desc=progress_desc,
                         disable=not show_progress,
