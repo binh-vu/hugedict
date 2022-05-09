@@ -1,1 +1,1 @@
-from hugedict.parallel.parallel import Parallel
+from hugedict.parallel.parallel import Parallel, Compressing
