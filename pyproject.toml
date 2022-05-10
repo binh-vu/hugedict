@@ -14,7 +14,7 @@ lbry-rocksdb-optimized = "^0.8.1"
 pybloomfiltermmap3 = "^0.5.5"
 zstandard = "^0.17.0"
 orjson = "^3.6.8"
-loguru = "^0.6.0"
+loguru = ">=0.6.0"
 tqdm = "^4.64.0"
 
 [tool.poetry.dev-dependencies]
