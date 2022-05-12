@@ -18,8 +18,11 @@ from tqdm import tqdm
 
 
 class FileFormat(str, Enum):
+    # each line is a json list of two items, key is extracted from the first item while value is extracted from the second item
     tuple2 = "tuple2"
+    # each line is a json object, key and value are extracted from the object
     jsonline = "jsonline"
+    # tab separated format, raw key and value must not contain tab and newline characters such as \r\n.
     tabsep = "tabsep"
 
 
@@ -198,7 +201,7 @@ def read_file(args: FileReaderArgs) -> List[Tuple[bytes, bytes]]:
                 outputs.append((key(k), value(v)))
         elif args.format == FileFormat.tabsep:
             for line in f:
-                k, v = line.split(b"\t", 1)
+                k, v = line.rstrip(b"\r\n").split(b"\t", 1)
                 outputs.append((key(k), value(v)))
         else:
             raise Exception(f"Unknown format: {format}")
