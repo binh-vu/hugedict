@@ -121,3 +121,13 @@ class Chain2:
 
     def exec(self, args):
         return self.g(self.f(args))
+
+
+class Chain3:
+    def __init__(self, h, g, f):
+        self.h = h
+        self.g = g
+        self.f = f
+
+    def exec(self, args):
+        return self.h(self.g(self.f(args)))
