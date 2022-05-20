@@ -147,6 +147,7 @@ def load(
 
 def process_fn(args: FileReaderArgs) -> int:
     """Read file and write list of key-value pairs to shared memory"""
+    global lock
     outputs = read_file(args)
 
     shm_idx = None
