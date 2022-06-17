@@ -1,0 +1,16 @@
+[package]
+name = "hugedict"
+version = "1.0.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "hugedict"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3 = "0.16.3"
+
+[features]
+extension-module = ["pyo3/extension-module"]
+default = ["extension-module"]
