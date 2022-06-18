@@ -40,12 +40,14 @@ pub enum FileFormat {
 /// * `dbopts` - options to start a RocksDB
 /// * `files` - path to the files to load into RocksDB
 /// * `format` - file format
-pub fn load(dbpath: &Path, dbopts: &Options, files: &[&Path], format: FileFormat, verbose: bool) {
-    let db: DBWithThreadMode<MultiThreaded> = DBWithThreadMode::open(dbopts, dbpath).unwrap();
+pub fn load(dbpath: &Path, dbopts: &Options, files: &[&Path], format: &FileFormat, verbose: bool) {
+    // let db: DBWithThreadMode<MultiThreaded> = DBWithThreadMode::open(dbopts, dbpath).unwrap();
 
-    files.iter()
+    let sst_files: Vec<i32> = files.iter()
         .map(|file| {
             build_sst_file(file, &format);
+
+            5
     //         // let mut writer = SstFileWriter::create(dbopts);
     //         // writer.open(dbpath)?;
 
@@ -58,27 +60,24 @@ pub fn load(dbpath: &Path, dbopts: &Options, files: &[&Path], format: FileFormat
     //         }
             
     //         // writer.finish()?;
-        });
+        })
+        .collect();
 }
 
 pub fn build_sst_file(file: &Path, format: &FileFormat) {
     let mut reader = match file.extension().and_then(OsStr::to_str) {
-        None => unimplemented!(),
-        Some("gz") => BufReader::new(GzDecoder::new(File::open(file).unwrap())),
-        _ => unimplemented!(),
+        // None => BufReader::new(File::open(file).unwrap()),
+        // Some("gz") => BufReader::new(GzDecoder::new(File::open(file).unwrap())),
+        _ => BufReader::new(File::open(file).unwrap()),
     };
-    // let reader = if file.extension().unwrap() == "gz" {
-    //     BufReader::new(GzDecoder::new(File::open(file).unwrap()))
-    // } else {
-    //     // BufReader::new(File::open(file).unwrap())
-    //     unimplemented!()
-    // };
+
+    println!("Build sst file: {:?}", file);
 
     match format {
         FileFormat::TabSep => {
             for line0 in reader.lines() {
                 let line = line0.unwrap();
-                let kv = line.splitn(1, "\t");
+                let kv: Vec<&str> = line.splitn(2, "\t").collect();
                 println!("{:?}", kv);
             }
         },
