@@ -1,19 +1,23 @@
-use rocksdb::{DBWithThreadMode, Options, DB};
+use rocksdb::{DBWithThreadMode, Options, DB, MultiThreaded};
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::ffi::OsStr;
+use std::{path::Path, io::BufReader, fs::File};
+use std::io::{self, BufRead};
+use std::prelude::*;
 use rayon::prelude::*;
 use flate2::read::GzDecoder;
 
 /// Extracting key and value from an object.
-struct KVExtractor {
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct KVExtractor {
     // object's attribute contains the key, None if key is the object itself.
-    key: Optional<String>,
+    key: Option<String>,
     // object's attribute contains the value, None if value is the object itself.
-    value: Optional<String>,
+    value: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
-enum FileFormat {
+pub enum FileFormat {
     // tab separated format of serialized byte key and value
     // serialized key must not contain tab character
     // serialized value must not contain newline character such as \r\n.
@@ -37,11 +41,11 @@ enum FileFormat {
 /// * `files` - path to the files to load into RocksDB
 /// * `format` - file format
 pub fn load(dbpath: &Path, dbopts: &Options, files: &[&Path], format: FileFormat, verbose: bool) {
-    let db = DBWithThreadMode<MultiThreaded>::open(dbopts, dbpath)?;
+    let db: DBWithThreadMode<MultiThreaded> = DBWithThreadMode::open(dbopts, dbpath).unwrap();
 
     files.iter()
         .map(|file| {
-            build_sst_file(file, format);
+            build_sst_file(file, &format);
     //         // let mut writer = SstFileWriter::create(dbopts);
     //         // writer.open(dbpath)?;
 
@@ -58,17 +62,24 @@ pub fn load(dbpath: &Path, dbopts: &Options, files: &[&Path], format: FileFormat
 }
 
 pub fn build_sst_file(file: &Path, format: &FileFormat) {
-    let reader = if file.extension() == "gz" {
-        BufReader::new(GzDecoder::new(file))
-    } else {
-        BufReader::new(File::open(file)?)
+    let mut reader = match file.extension().and_then(OsStr::to_str) {
+        None => unimplemented!(),
+        Some("gz") => BufReader::new(GzDecoder::new(File::open(file).unwrap())),
+        _ => unimplemented!(),
     };
+    // let reader = if file.extension().unwrap() == "gz" {
+    //     BufReader::new(GzDecoder::new(File::open(file).unwrap()))
+    // } else {
+    //     // BufReader::new(File::open(file).unwrap())
+    //     unimplemented!()
+    // };
 
     match format {
         FileFormat::TabSep => {
-            for line in reader.lines() {
-                let kv = line.split("\t", 1);
-                println!(kv);
+            for line0 in reader.lines() {
+                let line = line0.unwrap();
+                let kv = line.splitn(1, "\t");
+                println!("{:?}", kv);
             }
         },
         _ => unimplemented! ()

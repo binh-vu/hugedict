@@ -13,7 +13,7 @@ flate2 = { version = "1.0.24", features = ["zlib-ng"], default-features = false 
 pyo3 = "0.16.3"
 rayon = "1.5.3"
 rocksdb = "0.18.0"
-serde = "1.0.137"
+serde = { version = "1.0.137", features = ["derive"] }
 
 [features]
 extension-module = ["pyo3/extension-module"]
