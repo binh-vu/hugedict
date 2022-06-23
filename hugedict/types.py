@@ -27,7 +27,7 @@ class HugeMapping(Mapping[K, V]):
 
 class HugeMutableMapping(MutableMapping[K, V]):
     @abstractmethod
-    def cache(self) -> HugeMapping[K, V]:
+    def _cache(self) -> HugeMapping[K, V]:
         """Return a new mapping that will cache the results to
         avoid calling to an external mapping
         """

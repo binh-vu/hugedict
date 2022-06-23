@@ -22,6 +22,7 @@ import orjson
 from tqdm import tqdm
 from hugedict.types import F, Fn
 from hugedict.misc import (
+    Chain2,
     compress_zstd6_pyobject,
     decompress_zstd_pyobject,
     identity,
@@ -116,7 +117,7 @@ class Parallel:
                 if key is None:
                     keyfn = compress_pyobject
                 else:
-                    keyfn = LazyDBCacheFn.default_compressed_key
+                    keyfn = Chain2(partial(gzip.compress, mtime=0), key)
             else:
                 keyfn = key
 
@@ -354,17 +355,9 @@ class LazyDBCacheFn:
         self.fn_name = (
             namespace + ":" + fn.__name__ if len(namespace) > 0 else fn.__name__
         )
-        self.key = key or LazyDBCacheFn.default_key
+        self.key = key or CacheFnKey.default_key
 
         self.url = url or f"ipc://{self.dbpath.absolute()}/hugedict.ipc"
-
-    @staticmethod
-    def default_key(fn_name, args, kwargs):
-        return orjson.dumps((fn_name, args, kwargs))
-
-    @staticmethod
-    def default_compressed_key(fn_name, args, kwargs):
-        return gzip.compress(orjson.dumps((fn_name, args, kwargs)), mtime=0)
 
     def run(self, *args, **kwargs):
         key = self.key(self.fn_name, args, kwargs)
@@ -417,3 +410,13 @@ class LazyDBCacheFn:
         # clean previous directory if exists
         if (self.dbpath / self.SECONDARY_DIR).exists():
             shutil.rmtree(self.dbpath / self.SECONDARY_DIR)
+
+
+class CacheFnKey:
+    @staticmethod
+    def default_key(fn_name, args, kwargs):
+        return orjson.dumps((fn_name, args, kwargs))
+
+    @staticmethod
+    def single_str_arg(fn_name: str, args: tuple, kwargs: dict):
+        return args[0].encode()

@@ -122,6 +122,9 @@ class Chain2:
     def exec(self, args):
         return self.g(self.f(args))
 
+    def __call__(self, args):
+        return self.g(self.f(args))
+
 
 class Chain3:
     def __init__(self, h, g, f):

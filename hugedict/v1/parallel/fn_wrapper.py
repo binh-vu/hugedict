@@ -110,3 +110,9 @@ class LazyRocksDBCacheFn:
     @staticmethod
     def default_key(fn_name, args, kwargs):
         return orjson.dumps((fn_name, args, kwargs))
+
+
+class CacheFnKey:
+    @staticmethod
+    def single_str_arg(fn_name: str, args: tuple, kwargs: dict):
+        return args[0].encode()
