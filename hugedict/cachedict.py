@@ -1,5 +1,5 @@
 import os
-from typing import Iterator, KeysView, MutableMapping, ValuesView
+from typing import ItemsView, Iterator, KeysView, MutableMapping, ValuesView
 from hugedict.types import K, V
 from copy import copy
 
@@ -38,6 +38,9 @@ class CacheDict(MutableMapping[K, V]):
 
     def values(self) -> ValuesView[V]:
         return self.mapping.values()
+
+    def items(self) -> ItemsView[K, V]:
+        return self.mapping.items()
 
     def get(self, key: K, default=None):
         if key in self.cache:

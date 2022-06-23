@@ -12,8 +12,8 @@ from multiprocessing.managers import BaseManager, SharedMemoryManager, SyncManag
 from operator import itemgetter
 import pickle
 from typing import Any, Callable, List, Optional, Union
-from hugedict.mrsw_rocksdb import SecondarySyncedRocksDBDict
-from hugedict.parallel.fn_wrapper import (
+from hugedict.v1.mrsw_rocksdb import SecondarySyncedRocksDBDict
+from hugedict.v1.parallel.fn_wrapper import (
     LazyRocksDBCacheFn,
     ParallelFnWrapper,
 )
@@ -24,12 +24,12 @@ from hugedict.misc import (
     compress_pyobject,
     decompress_pyobject,
 )
-from hugedict.parallel.manager import (
+from hugedict.v1.parallel.manager import (
     MB,
     MyManager,
     SharedMemoryDictClient,
 )
-from hugedict.rocksdb import RocksDBDict
+from hugedict.v1.rocksdb import RocksDBDict
 from hugedict.types import F, Fn
 from loguru import logger
 from tqdm import tqdm

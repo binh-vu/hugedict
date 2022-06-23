@@ -1,6 +1,6 @@
 from pathlib import Path
 import shutil
-from hugedict.rocksdb import RocksDBDict
+from hugedict.deprecated.rocksdb import RocksDBDict
 from multiprocessing import Process, Queue, Pipe
 from loguru import logger
 

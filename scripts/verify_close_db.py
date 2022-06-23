@@ -1,6 +1,6 @@
 import shutil
-from hugedict.rocksdb import RocksDBDict
-from hugedict.mrsw_rocksdb import *
+from hugedict.v1.rocksdb import RocksDBDict
+from hugedict.v1.mrsw_rocksdb import *
 from multiprocessing.pool import *
 from hugedict.parallel.parallel import MyManager
 

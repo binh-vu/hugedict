@@ -3,8 +3,8 @@ from typing import Any, Callable, Optional, Type
 import orjson
 import inspect
 from inspect import signature
-from hugedict.mrsw_rocksdb import SecondarySyncedRocksDBDict
-from hugedict.rocksdb import RocksDBDict
+from hugedict.v1.mrsw_rocksdb import SecondarySyncedRocksDBDict
+from hugedict.v1.rocksdb import RocksDBDict
 from hugedict.types import Fn
 from loguru import logger
 

@@ -73,7 +73,7 @@ def load_single_file(
 
 def load(
     db: DB,
-    infiles: List[str],
+    infiles: Union[List[str], List[Path], List[Union[str, Path]]],
     format: FileFormat,
     key_fn: Callable[[Any], bytes],
     value_fn: Callable[[Any], bytes],
