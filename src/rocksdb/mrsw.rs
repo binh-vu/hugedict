@@ -1,4 +1,4 @@
-use std::{path::Path, thread::sleep, time::Duration};
+use std::{thread::sleep, time::Duration};
 
 use crate::error::HugeDictError;
 

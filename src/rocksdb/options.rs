@@ -3,7 +3,10 @@ use pyo3::{
     prelude::*,
     types::{PyBytes, PyString},
 };
-use rocksdb::{DBCompactionStyle as RocksDBCompactionStyle, Options as RocksDBOptions};
+use rocksdb::{
+    DBCompactionStyle as RocksDBCompactionStyle, DBCompressionType as RocksDBCompressionType,
+    Options as RocksDBOptions,
+};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
@@ -24,6 +27,60 @@ impl<'s> FromPyObject<'s> for DBCompactionStyle {
                 "Unknown compaction style: {}",
                 style
             ))),
+        }
+    }
+}
+
+impl From<DBCompactionStyle> for RocksDBCompactionStyle {
+    fn from(style: DBCompactionStyle) -> Self {
+        match style {
+            DBCompactionStyle::Level => RocksDBCompactionStyle::Level,
+            DBCompactionStyle::Universal => RocksDBCompactionStyle::Universal,
+            DBCompactionStyle::FIFO => RocksDBCompactionStyle::Fifo,
+        }
+    }
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum DBCompressionType {
+    None,
+    Snappy,
+    Zlib,
+    Bz2,
+    Lz4,
+    Lz4hc,
+    Zstd,
+}
+
+impl<'s> FromPyObject<'s> for DBCompressionType {
+    fn extract(obj: &'s PyAny) -> PyResult<Self> {
+        let style = obj.downcast::<PyString>()?.to_str()?;
+        match style {
+            "none" => Ok(DBCompressionType::None),
+            "snappy" => Ok(DBCompressionType::Snappy),
+            "zlib" => Ok(DBCompressionType::Zlib),
+            "bz2" => Ok(DBCompressionType::Bz2),
+            "lz4" => Ok(DBCompressionType::Lz4),
+            "lz4hc" => Ok(DBCompressionType::Lz4hc),
+            "zstd" => Ok(DBCompressionType::Zstd),
+            _ => Err(PyErr::new::<PyValueError, _>(format!(
+                "Unknown compression style: {}",
+                style
+            ))),
+        }
+    }
+}
+
+impl From<DBCompressionType> for RocksDBCompressionType {
+    fn from(style: DBCompressionType) -> Self {
+        match style {
+            DBCompressionType::None => RocksDBCompressionType::None,
+            DBCompressionType::Snappy => RocksDBCompressionType::Snappy,
+            DBCompressionType::Zlib => RocksDBCompressionType::Zlib,
+            DBCompressionType::Bz2 => RocksDBCompressionType::Bz2,
+            DBCompressionType::Lz4 => RocksDBCompressionType::Lz4,
+            DBCompressionType::Lz4hc => RocksDBCompressionType::Lz4hc,
+            DBCompressionType::Zstd => RocksDBCompressionType::Zstd,
         }
     }
 }
@@ -52,6 +109,8 @@ pub struct Options {
     pub disable_auto_compactions: Option<bool>,
     pub max_background_jobs: Option<i32>,
     pub max_subcompactions: Option<u32>,
+    pub compression_type: Option<DBCompressionType>,
+    pub bottommost_compression_type: Option<DBCompressionType>,
 }
 
 #[pymethods]
@@ -74,7 +133,9 @@ impl Options {
         compaction_style = "None",
         disable_auto_compactions = "None",
         max_background_jobs = "None",
-        max_subcompactions = "None"
+        max_subcompactions = "None",
+        compression_type = "None",
+        bottommost_compression_type = "None"
     )]
     fn new(
         create_if_missing: Option<bool>,
@@ -93,6 +154,8 @@ impl Options {
         disable_auto_compactions: Option<bool>,
         max_background_jobs: Option<i32>,
         max_subcompactions: Option<u32>,
+        compression_type: Option<DBCompressionType>,
+        bottommost_compression_type: Option<DBCompressionType>,
     ) -> Self {
         Options {
             create_if_missing: create_if_missing,
@@ -111,6 +174,8 @@ impl Options {
             disable_auto_compactions: disable_auto_compactions,
             max_background_jobs: max_background_jobs,
             max_subcompactions: max_subcompactions,
+            compression_type: compression_type,
+            bottommost_compression_type: bottommost_compression_type,
         }
     }
 
@@ -141,6 +206,8 @@ impl Options {
         self.disable_auto_compactions = o.disable_auto_compactions;
         self.max_background_jobs = o.max_background_jobs;
         self.max_subcompactions = o.max_subcompactions;
+        self.compression_type = o.compression_type;
+        self.bottommost_compression_type = o.bottommost_compression_type;
         Ok(())
     }
 }
@@ -184,17 +251,8 @@ impl Options {
         if let Some(level_zero_slowdown_writes_trigger) = self.level_zero_slowdown_writes_trigger {
             opts.set_level_zero_slowdown_writes_trigger(level_zero_slowdown_writes_trigger);
         }
-        match self.compaction_style {
-            Some(DBCompactionStyle::Level) => {
-                opts.set_compaction_style(RocksDBCompactionStyle::Level);
-            }
-            Some(DBCompactionStyle::Universal) => {
-                opts.set_compaction_style(RocksDBCompactionStyle::Universal);
-            }
-            Some(DBCompactionStyle::FIFO) => {
-                opts.set_compaction_style(RocksDBCompactionStyle::Fifo);
-            }
-            None => {}
+        if let Some(compaction_style) = self.compaction_style {
+            opts.set_compaction_style(compaction_style.into());
         }
         if let Some(disable_auto_compactions) = self.disable_auto_compactions {
             opts.set_disable_auto_compactions(disable_auto_compactions);
@@ -204,6 +262,12 @@ impl Options {
         }
         if let Some(max_subcompactions) = self.max_subcompactions {
             opts.set_max_subcompactions(max_subcompactions);
+        }
+        if let Some(compression_type) = self.compression_type {
+            opts.set_compression_type(compression_type.into());
+        }
+        if let Some(bottommost_compression_type) = self.bottommost_compression_type {
+            opts.set_bottommost_compression_type(bottommost_compression_type.into());
         }
         opts
     }

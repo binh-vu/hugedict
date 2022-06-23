@@ -2,6 +2,7 @@ from functools import partial
 from pathlib import Path
 from typing import Generic, List, Mapping, Tuple
 import pytest
+from hugedict.cachedict import CacheDict
 from hugedict.hugedict.rocksdb import RocksDBDict, Options
 from tests.python.test_mapping import TestMutableMappingSuite
 
@@ -48,3 +49,32 @@ class TestRocksDBDict(TestMutableMappingSuite):
     @pytest.fixture
     def unknown_keys(self) -> List:
         return ["Q10", 5, b"whatever", None]
+
+    def test_cache(
+        self,
+        mapping: RocksDBDict,
+        existed_items: List[tuple],
+        new_items: List[tuple],
+        unknown_keys: List,
+    ):
+        mcache = mapping.cache()
+        assert isinstance(mcache, CacheDict)
+
+        for k, v in existed_items:
+            assert k in mapping
+            assert k in mcache
+
+        for k in [x[0] for x in new_items] + unknown_keys:
+            assert k not in mapping
+            assert k not in mcache
+
+    def test_has_properties(self, mapping: RocksDBDict):
+        assert hasattr(mapping, "deser_value")
+        assert hasattr(mapping, "ser_value")
+
+    def test__put(self, mapping: RocksDBDict, new_items: List[tuple]):
+        for k, v in new_items:
+            mapping._put(k.encode(), v.encode())
+
+        for k, v in new_items:
+            assert mapping[k] == v

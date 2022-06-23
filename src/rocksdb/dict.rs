@@ -9,7 +9,7 @@ use pyo3::{
 };
 use rocksdb::{self, DBRawIteratorWithThreadMode};
 
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.hugedict.rocksdb", subclass)]
 pub struct RocksDBDict {
     db: rocksdb::DB,
     deser_key: Py<PyAny>,
@@ -42,6 +42,16 @@ impl RocksDBDict {
             deser_value,
             ser_value,
         })
+    }
+
+    #[getter]
+    fn deser_value(&self) -> PyResult<Py<PyAny>> {
+        Ok(self.deser_value.clone())
+    }
+
+    #[getter]
+    fn ser_value(&self) -> PyResult<Py<PyAny>> {
+        Ok(self.ser_value.clone())
     }
 
     fn __getitem__(&self, py: Python, key: &PyAny) -> PyResult<Py<PyAny>> {
@@ -121,6 +131,25 @@ impl RocksDBDict {
 
     fn pop(&self, py: Python, key: &PyAny, default: &PyAny) -> PyResult<Py<PyAny>> {
         convert_key!(self.impl_pop(py ; key ; default))
+    }
+
+    fn cache(slf: PyRef<'_, Self>, py: Python) -> PyResult<Py<PyAny>> {
+        let this: Py<RocksDBDict> = slf.into();
+        Ok(PyModule::import(py, "hugedict.cachedict")?
+            .getattr("CacheDict")?
+            .call1(PyTuple::new(py, [this]))?
+            .into())
+    }
+
+    fn _put(&self, key: &PyBytes, value: &PyBytes) -> PyResult<()> {
+        self.db
+            .put(key.as_bytes(), value.as_bytes())
+            .map_err(into_pyerr)
+    }
+
+    fn compact(&self) -> PyResult<()> {
+        self.db.compact_range::<&[u8], &[u8]>(None, None);
+        Ok(())
     }
 }
 

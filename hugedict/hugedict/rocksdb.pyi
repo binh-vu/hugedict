@@ -10,6 +10,17 @@ from typing import (
 
 from hugedict.types import KP, V, HugeMutableMapping
 
+DBCompactionStyle = Literal["level", "universal", "fifo"]
+DBCompressionStyle = Literal[
+    "none",
+    "snappy",
+    "zlib",
+    "bz2",
+    "lz4",
+    "lz4hc",
+    "zstd",
+]
+
 @dataclass
 class Options:
     create_if_missing: Optional[bool] = None
@@ -24,10 +35,12 @@ class Options:
     min_write_buffer_number_to_merge: Optional[int] = None
     level_zero_stop_writes_trigger: Optional[int] = None
     level_zero_slowdown_writes_trigger: Optional[int] = None
-    compaction_style: Optional[Literal["level", "universal", "fifo"]] = None
+    compaction_style: Optional[DBCompactionStyle] = None
     disable_auto_compactions: Optional[bool] = None
     max_background_jobs: Optional[int] = None
     max_subcompactions: Optional[int] = None
+    compression_type: Optional[DBCompressionStyle] = None
+    bottommost_compression_type: Optional[DBCompressionStyle] = None
 
 class FileFormat(TypedDict):
     record_type: RecordType
@@ -92,7 +105,16 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         ser_value: Callable[[V], bytes],
         readonly: bool = False,
     ): ...
-    def _cache(self) -> HugeMutableMapping[KP, V]: ...
+    @property
+    def deser_value(self) -> Callable[[memoryview], V]:
+        """Deserialize value from a memoryview."""
+    @property
+    def ser_value(self) -> Callable[[V], bytes]:
+        """Serialize value to bytes."""
+    def _put(self, k: bytes, v: bytes):
+        """Put the raw (bytes) key and value into the database."""
+    def compact(self):
+        """Compact the database."""
 
 def primary_db(url: str, path: str, opts: Options):
     """Start a primary rocksdb. Should be in a separated process."""

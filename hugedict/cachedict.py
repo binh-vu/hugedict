@@ -47,10 +47,8 @@ class CacheDict(HugeMutableMapping[K, V]):
             return self._cache[key]
         return self.mapping.get(key, default)
 
-    def cache_dict(self) -> "CacheDict":
-        """Return a clone of this object so that subsequence cache won't affect this object.
-        Using the name cache_dict, so that it can be mixed with existing object providing cache_dict such as RocksDBDict
-        """
+    def cache(self) -> "CacheDict":
         cache = CacheDict(self.mapping)
+        # Return a clone of this object so that subsequence cache won't affect this object.
         cache._cache = copy(self._cache)
         return cache

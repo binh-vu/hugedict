@@ -18,7 +18,6 @@ data_dir = Path(__file__).parent / "data"
 random.seed(10)
 
 db = get_entity_db("/workspace/sm-dev/data/wikidata/20211213/databases/wdentities.db")
-
 n = 3000
 part_size = 100
 kvs = []
@@ -26,7 +25,7 @@ kvs = []
 counter = 1
 for i in tqdm(range(n), desc="load records"):
     for i in range(100):
-        ent = db.get(f"Q{counter}")
+        ent = db.get(f"Q{counter}", None)
         if ent is not None:
             break
         counter = counter + 1
@@ -45,5 +44,7 @@ logger.info("Creating wikidata dataset of {} records", len(kvs))
 counter = 0
 for i in tqdm(range(0, n, part_size), desc="write records to disk"):
     file = data_dir / "wdentities" / f"part-{counter:04d}.tsv.gz"
-    M.serialize_byte_lines(kvs[i:i+part_size], file)
+    if len(kvs[i : i + part_size]) == 0:
+        break
+    M.serialize_byte_lines(kvs[i : i + part_size], file)
     counter += 1
