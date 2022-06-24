@@ -8,23 +8,23 @@ jobs:
   linux:
     strategy:
       matrix:
-        target: [x86_64, i686, aarc64] #, aarc64, armv7l, aarch64, s390x]
+        target: [x86_64, i686, aarch64] #, aarc64, armv7l, aarch64, s390x]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install Rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          default: true
-      - name: Set up QEMU
-        id: qemu
-        uses: docker/setup-qemu-action@v1
-        if: matrix.target != 'x86_64' || matrix.target != 'i686'
-        with:
-          image: tonistiigi/binfmt:latest
-          platforms: all
+#       - name: Install Rust toolchain
+#         uses: actions-rs/toolchain@v1
+#         with:
+#           toolchain: stable
+#           profile: minimal
+#           default: true
+#       - name: Set up QEMU
+#         id: qemu
+#         uses: docker/setup-qemu-action@v1
+#         if: matrix.target != 'x86_64' || matrix.target != 'i686'
+#         with:
+#           image: tonistiigi/binfmt:latest
+#           platforms: all
       # - name: Run test
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
