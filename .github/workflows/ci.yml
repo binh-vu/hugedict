@@ -8,7 +8,7 @@ jobs:
   linux:
     strategy:
       matrix:
-        target: [x86_64, i686, armv7l, s390x] #, armv7l, aarch64, s390x]
+        target: [x86_64, i686, armv7l] #, armv7l, aarch64, s390x]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -33,6 +33,7 @@ jobs:
           target: ${{ matrix.target }}
           command: build
           args: --release -o dist
+      - run: cat /home/runner/work/hugedict/hugedict/run-maturin-action.sh
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
