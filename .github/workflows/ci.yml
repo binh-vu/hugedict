@@ -12,13 +12,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Run test
-        run: cargo test --no-default-features --features pyo3/auto-initialize
+      # - name: Run test
+      #   run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         with:
           manylinux: auto
           command: build
-          # target: ${{ matrix.target }}
+          target: ${{ matrix.target }}
           args: --release -o dist
       - name: Upload wheels
         uses: actions/upload-artifact@v2
