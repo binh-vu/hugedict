@@ -12,7 +12,7 @@ from typing import (
     Union,
     MutableMapping,
 )
-from hugedict.rocksdb import RocksDBDict
+from hugedict.v1.rocksdb import RocksDBDict
 from hugedict.types import K, V, InvalidUsageError
 from pybloomfilter import BloomFilter
 
@@ -106,10 +106,10 @@ class SecondarySyncedRocksDBDict(RocksDBDict[K, V]):
         primary: IProxyDict,
         dbpath: Union[Path, str],
         secondary_name: str,
-        deser_key: Callable[[bytes], K] = None,
-        deser_value: Callable[[bytes], V] = None,
-        ser_key: Callable[[K], bytes] = None,
-        ser_value: Callable[[V], bytes] = None,
+        deser_key: Optional[Callable[[bytes], K]] = None,
+        deser_value: Optional[Callable[[bytes], V]] = None,
+        ser_key: Optional[Callable[[K], bytes]] = None,
+        ser_value: Optional[Callable[[V], bytes]] = None,
         enable_bloomfilter: bool = True,
     ):
         super().__init__(

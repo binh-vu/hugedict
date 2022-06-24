@@ -12,10 +12,11 @@ from multiprocessing.managers import BaseManager, SharedMemoryManager, SyncManag
 from operator import itemgetter
 import pickle
 from typing import Any, Callable, List, Optional, Union
-from hugedict.mrsw_rocksdb import SecondarySyncedRocksDBDict
-from hugedict.parallel.fn_wrapper import (
+from hugedict.v1.mrsw_rocksdb import SecondarySyncedRocksDBDict
+from hugedict.v1.parallel.fn_wrapper import (
     LazyRocksDBCacheFn,
     ParallelFnWrapper,
+    CacheFnKey,
 )
 from hugedict.misc import (
     compress_zstd6_pyobject,
@@ -24,12 +25,12 @@ from hugedict.misc import (
     compress_pyobject,
     decompress_pyobject,
 )
-from hugedict.parallel.manager import (
+from hugedict.v1.parallel.manager import (
     MB,
     MyManager,
     SharedMemoryDictClient,
 )
-from hugedict.rocksdb import RocksDBDict
+from hugedict.v1.rocksdb import RocksDBDict
 from hugedict.types import F, Fn
 from loguru import logger
 from tqdm import tqdm
@@ -110,6 +111,7 @@ class Parallel:
                 for server in servers:
                     server.unlink_all_shared_memories()
                 for cache, db_args in zip(self._cache, lst_db_args):
+                    cache.db_class = RocksDBDict
                     cache.db_args = db_args
 
     def map(
@@ -239,7 +241,14 @@ class Parallel:
         compress=Compressing.NoCompression,
         key: Optional[Callable[[str, tuple, dict], bytes]] = None,
     ) -> Callable[[F], F]:
-        """Cache a function (only work when using with Parallel object)"""
+        """Cache a function (only work when using with Parallel object)
+
+        Args:
+            dbpath: path to the db
+            namespace: namespace of the function, used to distinguish if you want to cache multiple functions in the same db
+            compress: whether to explicitly compress key or value of a record
+            key: a function to generate key from (namespace + ":" + func_name, func_args, func_kwargs)
+        """
         for cache in self._cache:
             assert cache.db_args["dbpath"] != dbpath, "dbpath must be unique"
 
