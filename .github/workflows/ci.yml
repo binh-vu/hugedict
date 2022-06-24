@@ -8,10 +8,12 @@ jobs:
   linux:
     strategy:
       matrix:
-        target: [x86_64, i686] #, armv7l, aarch64, s390x]
+        target: [x86_64] #, armv7l, aarch64, s390x]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - run: apt install -y clang
+      - run: which clang
 #       - name: Install Rust toolchain
 #         uses: actions-rs/toolchain@v1
 #         with:
