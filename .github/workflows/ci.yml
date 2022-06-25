@@ -34,7 +34,7 @@ jobs:
   windows:
     strategy:
       matrix:
-        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python: ["3.7", "3.8", "3.9", "3.10"]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -57,7 +57,7 @@ jobs:
   macos:
     strategy:
       matrix:
-        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python: ["3.7", "3.8", "3.9", "3.10"]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
