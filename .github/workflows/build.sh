@@ -3,7 +3,7 @@
 set -e
 
 # Description: builds Python's wheels.
-# The script is run in Debian image. Modified the `Setup Additional Building Dependencies` step to adapt to Centos image if you need to.
+# The script can only run on Debian or Centos images.
 #
 # Envionment Arguments: (handled by `args.py`)
 #   PYTHON_HOME: the path to the Python installation, which will be used to build the wheels for. 
@@ -36,14 +36,14 @@ echo "::group::Setup build tools"
 echo "Install CLang and LLVM"
 if ! command -v yum &> /dev/null
 then
+    # debian
+    apt update
+    apt install -y clang-11
+else
     # centos
     # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
     yum install -y llvm-toolset-7
     scl enable llvm-toolset-7 bash
-else
-    # debian
-    apt update
-    apt install -y clang-11
 fi
 
 # ##############################################
