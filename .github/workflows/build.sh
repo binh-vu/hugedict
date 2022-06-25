@@ -3,6 +3,7 @@
 set -e
 
 # Description: builds Python's wheels.
+# The script is run in Debian image. Modified the `Setup Additional Building Dependencies` step to adapt to Centos image if you need to.
 #
 # Envionment Arguments: (handled by `args.py`)
 #   PYTHON_HOME: the path to the Python installation, which will be used to build the wheels for. 
@@ -49,9 +50,8 @@ echo
 
 echo "::group::Setup Additional Building Dependencies"
 # to build rocksdb, we need CLang and LLVM
-# https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
-yum install -y llvm-toolset-7
-scl enable llvm-toolset-7 bash
+apt update
+apt install -y clang-11
 echo "::endgroup::"
 echo
 
