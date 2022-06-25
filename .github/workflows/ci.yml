@@ -11,12 +11,12 @@ jobs:
         platform:
           - target: x86_64-unknown-linux-gnu
             image: quay.io/pypa/manylinux2014_x86_64:latest
-          - target: i686-unknown-linux-gnu
-            image: quay.io/pypa/manylinux2014_i686:latest
+          # - target: i686-unknown-linux-gnu
+          #   image: quay.io/pypa/manylinux2014_i686:latest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: build
+      - name: build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
             -e PYTHON_HOMES=$PYTHON_HOMES -e CARGO_NET_GIT_FETCH_WITH_CLI=$CARGO_NET_GIT_FETCH_WITH_CLI \
@@ -25,43 +25,57 @@ jobs:
         env:
           PYTHON_HOMES: /opt/python
           CARGO_NET_GIT_FETCH_WITH_CLI: false
+      - name: upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  windows:
+    strategy:
+      matrix:
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run test
+        run: cargo test --no-default-features --features pyo3/auto-initialize
+      - uses: messense/maturin-action@v1
+        with:
+          command: build
+          args: --release --no-sdist -o dist -i python
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
           name: wheels
           path: dist
 
-  # windows:
-  #   runs-on: windows-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Run test
-  #       run: cargo test --no-default-features --features pyo3/auto-initialize
-  #     - uses: messense/maturin-action@v1
-  #       with:
-  #         command: build
-  #         args: --release --no-sdist -o dist
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: wheels
-  #         path: dist
-
-  # macos:
-  #   runs-on: macos-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Run test
-  #       run: cargo test --no-default-features --features pyo3/auto-initialize
-  #     - uses: messense/maturin-action@v1
-  #       with:
-  #         command: build
-  #         args: --release --no-sdist -o dist --universal2
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: wheels
-  #         path: dist
+  macos:
+    strategy:
+      matrix:
+        python: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run test
+        run: cargo test --no-default-features --features pyo3/auto-initialize
+      - uses: messense/maturin-action@v1
+        with:
+          command: build
+          args: --release --no-sdist -o dist --universal2
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
 
   # release:
   #   name: Release
