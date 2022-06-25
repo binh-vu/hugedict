@@ -10,9 +10,9 @@ jobs:
       matrix:
         platform:
           - target: x86_64-unknown-linux-gnu
-            image: quay.io/pypa/manylinux2010_x86_64:latest
+            image: quay.io/pypa/manylinux2014_x86_64:latest
           - target: i686-unknown-linux-gnu
-            image: quay.io/pypa/manylinux2010_i686:latest
+            image: quay.io/pypa/manylinux2014_i686:latest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
