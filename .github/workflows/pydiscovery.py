@@ -1,8 +1,6 @@
 from __future__ import print_function
 import os, subprocess, re
 
-from numpy import minimum
-
 
 homes = []
 if "PYTHON_HOME" in os.environ:
