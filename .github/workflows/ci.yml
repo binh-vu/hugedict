@@ -35,7 +35,8 @@ jobs:
   windows:
     strategy:
       matrix:
-        python: ["3.7", "3.8", "3.9", "3.10"]
+        # python: ["3.7", "3.8", "3.9", "3.10", "pypy3.7", "pypy3.8", "pypy3.9"]
+        python: ["3.7"]
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
@@ -58,7 +59,8 @@ jobs:
   macos:
     strategy:
       matrix:
-        python: ["3.7", "3.8", "3.9", "3.10"]
+        # python: ["3.7", "3.8", "3.9", "3.10", "pypy3.7", "pypy3.8", "pypy3.9"]
+        python: ["3.7"]
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
@@ -78,19 +80,19 @@ jobs:
           name: wheels
           path: dist
 
-  # release:
-  #   name: Release
-  #   runs-on: ubuntu-latest
-  #   if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master')"
-  #   needs: [macos, windows, linux]
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: wheels
-  #     - name: Publish to PyPI
-  #       uses: messense/maturin-action@v1
-  #       env:
-  #         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-  #       with:
-  #         command: upload
-  #         args: --skip-existing *
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: "startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')"
+    needs: [macos, windows, linux]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+      - name: Publish to PyPI
+        uses: messense/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --skip-existing *
