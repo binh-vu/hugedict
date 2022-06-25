@@ -25,20 +25,20 @@ jobs:
             bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
         env:
           EXTRA_PATH: /opt/python/cp38-cp38/bin
-          PYTHON_HOMES: /opt/python
+          PYTHON_HOMES: /opt/python/cp37-cp37m
           CARGO_NET_GIT_FETCH_WITH_CLI: false
-      - name: Prepare to run test
-        if: matrix.platform.run_test == true
-        uses: actions/setup-python@v4
-        with:
-          python-version: 3.7
-      - name: Run test
-        if: matrix.platform.run_test == true
-        run: |
-          pip install dist/*cp37*.whl
-          pip install pytest
+      # - name: Prepare to run test
+      #   if: matrix.platform.run_test == true
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: 3.7
+      # - name: Run test
+      #   if: matrix.platform.run_test == true
+      #   run: |
+      #     pip install dist/*cp37*.whl
+      #     pip install pytest
 
-          pytest
+      #     pytest
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
