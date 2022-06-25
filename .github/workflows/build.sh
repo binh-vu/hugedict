@@ -47,6 +47,14 @@ source $HOME/.cargo/env
 echo "::endgroup::"
 echo
 
+echo "::group::Setup Additional Building Dependencies"
+# to build rocksdb, we need CLang and LLVM
+# https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
+yum install -y llvm-toolset-7
+scl enable llvm-toolset-7 bash
+echo "::endgroup::"
+echo
+
 echo "::group::Discovering Python"
 IFS=',' read -a PYTHON_HOMES <<< $(python $SCRIPT_DIR/pydiscovery.py)
 if [ ${#PYTHON_HOMES[@]} -eq 0 ]; then
