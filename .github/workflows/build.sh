@@ -30,7 +30,24 @@ then
     exit 1
 fi
 
-echo "::group::Setup Rust"
+echo "::group::Setup build tools"
+# ##############################################
+# to build rocksdb, we need CLang and LLVM
+echo "Install CLang and LLVM"
+if ! command -v yum &> /dev/null
+then
+    # centos
+    # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
+    yum install -y llvm-toolset-7
+    scl enable llvm-toolset-7 bash
+else
+    # debian
+    apt update
+    apt install -y clang-11
+fi
+
+# ##############################################
+echo "Install Rust"
 if ! command -v cargo &> /dev/null
 then
     # install rust and cargo
@@ -47,13 +64,7 @@ then
 fi
 
 source $HOME/.cargo/env
-echo "::endgroup::"
-echo
 
-echo "::group::Setup Additional Building Dependencies"
-# to build rocksdb, we need CLang and LLVM
-apt update
-apt install -y clang-11
 echo "::endgroup::"
 echo
 
@@ -73,16 +84,12 @@ echo
 for PYTHON_HOME in "${PYTHON_HOMES[@]}"
 do
     echo "::group::Building for Python $PYTHON_HOME"
-    
-    echo "::group::Install Building Tools"
-    "$PYTHON_HOME/bin/pip" install maturin
-    echo "::endgroup::"
-    echo
 
-    echo "::group::Building Wheels"
+    echo "Run: $PYTHON_HOME/bin/pip install maturin"    
+    "$PYTHON_HOME/bin/pip" install maturin
+
     echo "Run: $PYTHON_HOME/bin/maturin build -r -o dist -i $PYTHON_HOME/bin/python --target $target"
     "$PYTHON_HOME/bin/maturin" build -r -o dist -i "$PYTHON_HOME/bin/python" --target $target
-    echo "::endgroup::"
 
     echo "::endgroup::"
     echo

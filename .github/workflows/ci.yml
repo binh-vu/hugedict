@@ -10,7 +10,7 @@ jobs:
       matrix:
         platform:
           - target: x86_64-unknown-linux-gnu
-            image: quay.io/pypa/manylinux_2_24_x86_64:latest
+            image: quay.io/pypa/manylinux2010_x86_64:latest
             run_test: true
           # - target: i686-unknown-linux-gnu
           #   image: quay.io/pypa/manylinux_2_24_i686:latest
@@ -20,13 +20,11 @@ jobs:
       - name: Build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
-            -e EXTRA_PATH=$EXTRA_PATH -e PYTHON_HOMES=$PYTHON_HOMES -e CARGO_NET_GIT_FETCH_WITH_CLI=$CARGO_NET_GIT_FETCH_WITH_CLI \
+            -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
+            -e PYTHON_HOMES=/opt/python/cp38-cp38 \
+            -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
             ${{ matrix.platform.image }} \
             bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
-        env:
-          EXTRA_PATH: /opt/python/cp38-cp38/bin
-          PYTHON_HOMES: /opt/python/cp38-cp38
-          CARGO_NET_GIT_FETCH_WITH_CLI: false
       # - name: Prepare to run test
       #   if: matrix.platform.run_test == true
       #   uses: actions/setup-python@v4
