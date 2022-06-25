@@ -8,34 +8,23 @@ jobs:
   linux:
     strategy:
       matrix:
-        target: [x86_64] #, armv7l, aarch64, s390x]
+        platform:
+          - target: x86_64-unknown-linux-gnu
+            image: quay.io/pypa/manylinux2010_x86_64:latest
+          - target: i686-unknown-linux-gnu
+            image: quay.io/pypa/manylinux2010_i686:latest
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: apt install -y clang
-      - run: which clang
-#       - name: Install Rust toolchain
-#         uses: actions-rs/toolchain@v1
-#         with:
-#           toolchain: stable
-#           profile: minimal
-#           default: true
-#       - name: Set up QEMU
-#         id: qemu
-#         uses: docker/setup-qemu-action@v1
-#         if: matrix.target != 'x86_64' || matrix.target != 'i686'
-#         with:
-#           image: tonistiigi/binfmt:latest
-#           platforms: all
-      # - name: Run test
-      #   run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
-        with:
-          manylinux: auto
-          target: ${{ matrix.target }}
-          command: build
-          args: --release -o dist
-      - run: cat /home/runner/work/hugedict/hugedict/run-maturin-action.sh
+      - name: build
+        run: |
+          docker run --rm -w /project -v $(pwd):/project \
+            -e PYTHON_HOMES=$PYTHON_HOMES -e CARGO_NET_GIT_FETCH_WITH_CLI=$CARGO_NET_GIT_FETCH_WITH_CLI \
+            ${{ matrix.platform.image }} \
+            bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
+        env:
+          PYTHON_HOMES: /opt/python
+          CARGO_NET_GIT_FETCH_WITH_CLI: false
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
