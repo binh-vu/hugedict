@@ -25,7 +25,7 @@ jobs:
             bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
         env:
           EXTRA_PATH: /opt/python/cp38-cp38/bin
-          PYTHON_HOMES: /opt/python/cp37-cp37m
+          PYTHON_HOMES: /opt/python/cp38-cp38
           CARGO_NET_GIT_FETCH_WITH_CLI: false
       # - name: Prepare to run test
       #   if: matrix.platform.run_test == true
