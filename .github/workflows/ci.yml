@@ -19,10 +19,11 @@ jobs:
       - name: build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
-            -e PYTHON_HOMES=$PYTHON_HOMES -e CARGO_NET_GIT_FETCH_WITH_CLI=$CARGO_NET_GIT_FETCH_WITH_CLI \
+            -e EXTRA_PATH=$EXTRA_PATH -e PYTHON_HOMES=$PYTHON_HOMES -e CARGO_NET_GIT_FETCH_WITH_CLI=$CARGO_NET_GIT_FETCH_WITH_CLI \
             ${{ matrix.platform.image }} \
             bash /project/.github/workflows/build.sh -t ${{ matrix.platform.target }}
         env:
+          EXTRA_PATH: /opt/python/cp38-cp38/bin
           PYTHON_HOMES: /opt/python
           CARGO_NET_GIT_FETCH_WITH_CLI: false
       - name: upload wheels

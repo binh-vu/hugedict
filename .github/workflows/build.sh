@@ -13,6 +13,8 @@ set -e
 # Arguments:
 #   -t <target>: target platform. See https://doc.rust-lang.org/nightly/rustc/platform-support.html
 
+export PATH=$EXTRA_PATH:$PATH
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 while getopts t: flag
