@@ -6,6 +6,7 @@ import gc
 import gzip
 from inspect import signature
 from multiprocessing import Pool, Process, get_context
+from multiprocessing.context import SpawnProcess
 from multiprocessing.pool import ThreadPool
 from operator import itemgetter
 import os
@@ -391,14 +392,16 @@ class LazyDBCacheFn:
 
         return self.db[key]
 
-    def start_primary(self) -> Optional[Process]:
+    def start_primary(self) -> Optional[SpawnProcess]:
         assert (
             self.db is None
         ), "Switching to Multi-read single-write mode must done before starting a primary instance"
         self.is_mrsw = True
         self.cleanup()
 
-        p = Process(target=primary_db, args=(self.url, str(self.dbpath), self.dbopts))
+        p = get_context("spawn").Process(
+            target=primary_db, args=(self.url, str(self.dbpath), self.dbopts)
+        )
         p.start()
         return p
 

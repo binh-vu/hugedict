@@ -1,19 +1,14 @@
 from functools import partial
-import os
-import shutil
-import time
-from typing import Generator
-from uuid import uuid4
-from multiprocessing import Process
+from multiprocessing import Process, get_context
 from pathlib import Path
-from loguru import logger
 
-import pytest
 from hugedict.hugedict.rocksdb import Options, SecondaryDB, primary_db, stop_primary_db
 
 
 def test_start_and_close_primary_db(wdprops: Path, url: str):
-    p = Process(target=primary_db, args=(url, str(wdprops), Options()))
+    p = get_context("spawn").Process(
+        target=primary_db, args=(url, str(wdprops), Options())
+    )
     p.start()
 
     # # wait till primary db is ready
@@ -31,7 +26,9 @@ def test_start_and_close_primary_db(wdprops: Path, url: str):
 
 
 def test_primary_secondary_db(wdprops: Path, url: str):
-    p = Process(target=primary_db, args=(url, str(wdprops), Options()))
+    p = get_context("spawn").Process(
+        target=primary_db, args=(url, str(wdprops), Options())
+    )
     p.start()
 
     db0 = SecondaryDB(
