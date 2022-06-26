@@ -33,6 +33,7 @@ jobs:
       - name: Run test
         if: matrix.platform.run_test == true
         run: |
+          ls dist
           pip install dist/*cp37*.whl
           pip install pytest
 
