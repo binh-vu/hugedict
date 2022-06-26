@@ -43,7 +43,7 @@ else
     # centos
     # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
     yum install -y llvm-toolset-7
-    scl enable llvm-toolset-7 bash
+    source /opt/rh/llvm-toolset-7/enable
 fi
 
 # ##############################################
