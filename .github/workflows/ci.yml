@@ -52,30 +52,34 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python }}
+      - run: |
+          mkdir dist
+          echo haha > dist/hugedict-2.1.0-cp37-none-win_amd64.whl
+          cat dist/*cp37*
+      # - name: Set up Python
+      #   uses: actions/setup-python@v4
+      #   with:
+      #     python-version: ${{ matrix.python }}
       # - name: Run test
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
-        with:
-          command: build
-          args: --release --no-sdist -o dist -i python
-      - name: Run test
-        if: matrix.python == '3.7'
-        run: |
-          ls dist
-          pip install dist/*cp37*.whl
-          pip install pytest
-          # temporary moving the src to another folder to run the test
-          # mv hugedict hugedict2
-          pytest
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
+      # - uses: messense/maturin-action@v1
+      #   with:
+      #     command: build
+      #     args: --release --no-sdist -o dist -i python
+      # - name: Run test
+      #   if: matrix.python == '3.7'
+      #   run: |
+      #     ls dist
+      #     pip install dist/*cp37*.whl
+      #     pip install pytest
+      #     # temporary moving the src to another folder to run the test
+      #     # mv hugedict hugedict2
+      #     pytest
+      # - name: Upload wheels
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: wheels
+      #     path: dist
 
   # macos:
   #   strategy:
