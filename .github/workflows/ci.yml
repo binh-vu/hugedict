@@ -33,10 +33,10 @@ jobs:
       - name: Run test
         if: matrix.platform.run_test == true
         run: |
-          ls dist
           pip install dist/*cp38*.whl
           pip install pytest
-          cd tests
+          # temporary moving the src to another folder to run the test
+          mv hugedict hugedict2
           pytest
       - name: Upload wheels
         uses: actions/upload-artifact@v2
