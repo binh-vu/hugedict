@@ -29,12 +29,12 @@ jobs:
         if: matrix.platform.run_test == true
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Run test
         if: matrix.platform.run_test == true
         run: |
           ls dist
-          pip install dist/*cp37*.whl
+          pip install dist/*cp38*.whl
           pip install pytest
 
           pytest
