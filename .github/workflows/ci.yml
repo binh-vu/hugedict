@@ -56,8 +56,8 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      - name: Run test
-        run: cargo test --no-default-features --features pyo3/auto-initialize
+      # - name: Run test
+      #   run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         with:
           command: build
@@ -65,7 +65,7 @@ jobs:
       - name: Run test
         if: matrix.python == '3.7'
         run: |
-          pip install dist/*cp38*.whl
+          pip install dist/*cp37*.whl
           pip install pytest
           # temporary moving the src to another folder to run the test
           # mv hugedict hugedict2
