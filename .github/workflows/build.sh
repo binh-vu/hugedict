@@ -3,7 +3,7 @@
 set -e
 
 # Description: builds Python's wheels.
-# The script can only run on Debian or Centos images.
+# The script needs yum or apt
 #
 # Envionment Arguments: (handled by `args.py`)
 #   PYTHON_HOME: the path to the Python installation, which will be used to build the wheels for. 
@@ -51,8 +51,8 @@ echo "Install Rust"
 if ! command -v cargo &> /dev/null
 then
     # install rust and cargo
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
-    export PATH=$HOME/.cargo/bin:$PATH
+    curl --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain stable
+    source $HOME/.cargo/env
 else
     echo "Rust is already installed."
     rustup show
@@ -62,8 +62,6 @@ if [ ! -d $(rustc --print target-libdir --target "$target" ) ]
 then
     rustup target add $target;
 fi
-
-source $HOME/.cargo/env
 
 echo "::endgroup::"
 echo
