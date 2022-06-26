@@ -63,7 +63,7 @@ jobs:
           command: build
           args: --release --no-sdist -o dist -i python
       - name: Run test
-        if: matrix.python == "3.7"
+        if: matrix.python == '3.7'
         run: |
           pip install dist/*cp38*.whl
           pip install pytest
