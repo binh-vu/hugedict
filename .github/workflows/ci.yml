@@ -65,6 +65,7 @@ jobs:
       - name: Run test
         if: matrix.python == '3.7'
         run: |
+          ls dist
           pip install dist/*cp37*.whl
           pip install pytest
           # temporary moving the src to another folder to run the test
