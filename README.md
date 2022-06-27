@@ -12,7 +12,7 @@ pip install hugedict
 
 To compile the source, run: `maturin build -r` inside the project directory. You need [Rust](https://www.rust-lang.org/), [Maturin](https://github.com/PyO3/maturin), CMake and CLang (to build [Rust-RocksDB](https://github.com/rust-rocksdb/rust-rocksdb)).
 
-## Features:
+## Features
 
 1. Create a mutable mapping backed by RocksDB
 
