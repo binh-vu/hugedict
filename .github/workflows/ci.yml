@@ -62,6 +62,7 @@ jobs:
           python -c "import urllib.request; urllib.request.urlretrieve('http://mira.isi.edu:8000/hugedict-2.1.0-cp37-none-win_amd64.whl', 'hugedict-2.1.0-cp37-none-win_amd64.whl')"
           cd ..
           ls dist
+          echo $SHELL
           pip install dist/*cp37*.whl
       # - name: Run test
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
