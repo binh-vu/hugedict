@@ -56,38 +56,38 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
-      # - run: |
-      #     mkdir dist
-      #     cd dist
-      #     python -c "import urllib.request; urllib.request.urlretrieve('http://mira.isi.edu:8000/hugedict-2.1.0-cp37-none-win_amd64.whl', 'hugedict-2.1.0-cp37-none-win_amd64.whl')"
-      #     cd ..
-      #     ls dist
-      #     echo $SHELL
-      #     bash -c 'pwd; pip install dist/*cp37*.whl'
-      #     pip install pytest
-      #     # temporary moving the src to another folder to run the test
-      #     mv hugedict hugedict2
-      #     pytest
-      # - name: Run test
-      #   run: cargo test --no-default-features --features pyo3/auto-initialize
-      - uses: messense/maturin-action@v1
-        with:
-          command: build
-          args: --release --no-sdist -o dist -i python
-      - name: Upload wheels
-        uses: actions/upload-artifact@v2
-        with:
-          name: wheels
-          path: dist
-      - name: Run test
-        if: matrix.python == '3.8'
-        run: |
+      - run: |
+          mkdir dist
+          cd dist
+          python -c "import urllib.request; urllib.request.urlretrieve('http://mira.isi.edu:8000/hugedict-2.1.0-cp38-none-win_amd64.whl', 'hugedict-2.1.0-cp38-none-win_amd64.whl')"
+          cd ..
           ls dist
-          bash -c 'pwd; pip install dist/*cp37*.whl'
+          echo $SHELL
+          bash -c 'pwd; pip install dist/*cp38*.whl'
           pip install pytest
           # temporary moving the src to another folder to run the test
           mv hugedict hugedict2
           pytest
+      # - name: Run test
+      #   run: cargo test --no-default-features --features pyo3/auto-initialize
+      # - uses: messense/maturin-action@v1
+      #   with:
+      #     command: build
+      #     args: --release --no-sdist -o dist -i python
+      # - name: Upload wheels
+      #   uses: actions/upload-artifact@v2
+      #   with:
+      #     name: wheels
+      #     path: dist
+      # - name: Run test
+      #   if: matrix.python == '3.8'
+      #   run: |
+      #     ls dist
+      #     bash -c 'pwd; pip install dist/*cp38*.whl'
+      #     pip install pytest
+      #     # temporary moving the src to another folder to run the test
+      #     mv hugedict hugedict2
+      #     pytest
 
   # macos:
   #   strategy:
