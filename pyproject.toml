@@ -8,7 +8,7 @@ description = "A dictionary-like object that is friendly with multiprocessing an
 readme = "README.md"
 license = { file = "LICENSE" }
 
-requires-python = ">=3.7"
+requires-python = ">=3.8"
 
 dependencies = [
     'orjson >= 3.6.8, < 4.0.0',

@@ -67,7 +67,7 @@ echo "::endgroup::"
 echo
 
 echo "::group::Discovering Python"
-IFS=',' read -a PYTHON_HOMES <<< $(MINIMUM_PYTHON_VERSION=3.7 python $SCRIPT_DIR/pydiscovery.py)
+IFS=',' read -a PYTHON_HOMES <<< $(MINIMUM_PYTHON_VERSION=3.8 python $SCRIPT_DIR/pydiscovery.py)
 if [ ${#PYTHON_HOMES[@]} -eq 0 ]; then
     echo "No Python found. Did you forget to set any environment variable PYTHON_HOME or PYTHON_HOMES?"
 else
