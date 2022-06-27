@@ -63,7 +63,7 @@ jobs:
           cd ..
           ls dist
           echo $SHELL
-          pip install dist/*cp37*.whl
+          bash -c 'pwd; pip install dist/*cp37*.whl'
       # - name: Run test
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
       # - uses: messense/maturin-action@v1
