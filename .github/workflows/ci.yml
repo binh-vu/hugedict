@@ -66,7 +66,7 @@ jobs:
           bash -c 'pwd; pip install dist/*cp37*.whl'
           pip install pytest
           # temporary moving the src to another folder to run the test
-          # mv hugedict hugedict2
+          mv hugedict hugedict2
           pytest
       # - name: Run test
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
