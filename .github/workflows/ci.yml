@@ -59,7 +59,7 @@ jobs:
       - run: |
           mkdir dist
           cd dist
-          python -c 'urllib.request.urlretrieve("http://mira.isi.edu:8000/hugedict-2.1.0-cp37-none-win_amd64.whl", "hugedict-2.1.0-cp37-none-win_amd64.whl")
+          python -c 'urllib.request.urlretrieve("http://mira.isi.edu:8000/hugedict-2.1.0-cp37-none-win_amd64.whl", "hugedict-2.1.0-cp37-none-win_amd64.whl")'
           cd ..
           ls dist
           ls dist/*cp37*.whl
