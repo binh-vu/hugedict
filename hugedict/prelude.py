@@ -1,4 +1,8 @@
-from hugedict.hugedict.rocksdb import RocksDBDict, Options as RocksDBOptions, load
+from hugedict.hugedict.rocksdb import (
+    RocksDBDict,
+    Options as RocksDBOptions,
+    load as rocksdb_load,
+)
 from hugedict.parallel import (
     Parallel,
     Compressing as ParallelCacheCompressingMode,
