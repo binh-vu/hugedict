@@ -3,7 +3,7 @@ use crate::error::into_pyerr;
 use super::options::Options;
 use crate::macros::call_method;
 use pyo3::{
-    exceptions::PyKeyError,
+    exceptions::{PyKeyError, PyValueError},
     prelude::*,
     types::{PyBytes, PyLong, PyString, PyTuple},
 };
@@ -20,7 +20,7 @@ pub struct RocksDBDict {
 #[pymethods]
 impl RocksDBDict {
     #[new]
-    #[args(readonly = "false")]
+    #[args(readonly = "false", secondary_mode = "false", secondary_path = "None")]
     pub fn new(
         path: &str,
         options: &Options,
@@ -28,12 +28,27 @@ impl RocksDBDict {
         deser_value: Py<PyAny>,
         ser_value: Py<PyAny>,
         readonly: bool,
+        secondary_mode: bool,
+        secondary_path: Option<&str>,
     ) -> PyResult<Self> {
         let db = if readonly {
             rocksdb::DB::open_for_read_only(&options.get_options(), path, false)
                 .map_err(into_pyerr)?
         } else {
-            rocksdb::DB::open(&options.get_options(), path).map_err(into_pyerr)?
+            if secondary_mode {
+                rocksdb::DB::open_as_secondary(
+                    &options.get_options(),
+                    path,
+                    secondary_path.ok_or_else(|| {
+                        PyValueError::new_err(
+                            "secondary path must not be None when secondary_mode is True",
+                        )
+                    })?,
+                )
+                .map_err(into_pyerr)?
+            } else {
+                rocksdb::DB::open(&options.get_options(), path).map_err(into_pyerr)?
+            }
         };
 
         Ok(Self {
@@ -147,9 +162,27 @@ impl RocksDBDict {
             .map_err(into_pyerr)
     }
 
-    fn compact(&self) -> PyResult<()> {
-        self.db.compact_range::<&[u8], &[u8]>(None, None);
+    #[args(start = "None", end = "None")]
+    fn compact(&self, start: Option<&PyAny>, end: Option<&PyAny>) -> PyResult<()> {
+        match (start, end) {
+            (None, None) => self.db.compact_range::<&[u8], &[u8]>(None, None),
+            (Some(start), None) => self
+                .db
+                .compact_range::<&[u8], &[u8]>(Some(pyser_key(start)?.as_ref().as_ref()), None),
+            (None, Some(end)) => self
+                .db
+                .compact_range::<&[u8], &[u8]>(None, Some(pyser_key(end)?.as_ref().as_ref())),
+            (Some(start), Some(end)) => self.db.compact_range::<&[u8], &[u8]>(
+                Some(pyser_key(start)?.as_ref().as_ref()),
+                Some(pyser_key(end)?.as_ref().as_ref()),
+            ),
+        }
+
         Ok(())
+    }
+
+    fn try_catch_up_with_primary(&self) -> PyResult<()> {
+        self.db.try_catch_up_with_primary().map_err(into_pyerr)
     }
 }
 

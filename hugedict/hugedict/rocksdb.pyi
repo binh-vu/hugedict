@@ -94,6 +94,9 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         deser_key: deserialize key from a memoryview
         deser_value: deserialize value from a memoryview
         ser_value: serialize value to bytes
+        readonly: whether to open the database in readonly mode (can open many times)
+        secondary_mode: whether to open the database in secondary mode
+        secondary_path: path to secondary rocksdb database
     """
 
     def __init__(
@@ -104,6 +107,8 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         deser_value: Callable[[memoryview], V],
         ser_value: Callable[[V], bytes],
         readonly: bool = False,
+        secondary_mode: bool = False,
+        secondary_path: Optional[str] = None,
     ): ...
     @property
     def deser_value(self) -> Callable[[memoryview], V]:
@@ -113,8 +118,10 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         """Serialize value to bytes."""
     def _put(self, k: bytes, v: bytes):
         """Put the raw (bytes) key and value into the database."""
-    def compact(self):
-        """Compact the database."""
+    def compact(self, start: Optional[KP], end: Optional[KP]):
+        """Compact the database on the range of keys"""
+    def try_catch_up_with_primary(self):
+        """For secondary mode. Tries to catch up with the primary by reading as much as possible from the log files."""
 
 def primary_db(url: str, path: str, opts: Options):
     """Start a primary rocksdb. Should be in a separated process."""
