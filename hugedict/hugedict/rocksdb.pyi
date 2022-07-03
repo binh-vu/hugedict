@@ -2,9 +2,11 @@ from dataclasses import dataclass
 from typing import (
     Callable,
     Generic,
+    Iterator,
     Literal,
     Optional,
     List,
+    Tuple,
     TypedDict,
 )
 
@@ -118,6 +120,12 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         """Serialize value to bytes."""
     def _put(self, k: bytes, v: bytes):
         """Put the raw (bytes) key and value into the database."""
+    # RocksDB seems only provide prefix seek (https://github.com/facebook/rocksdb/wiki/Prefix-Seek)
+    # currently, I haven't got any idea or do research to find an efficient implementation.
+    # def prefix_keys(self, prefix: KP) -> Iterator[KP]:
+    #     """Iterate over keys that have the given prefix."""
+    # def prefix_items(self, prefix: KP) -> Iterator[Tuple[KP, V]]:
+    #     """Iterate over items which keys have the given prefix"""
     def compact(self, start: Optional[KP], end: Optional[KP]):
         """Compact the database on the range of keys"""
     def try_catch_up_with_primary(self):

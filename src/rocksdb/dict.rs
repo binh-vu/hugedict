@@ -7,7 +7,7 @@ use pyo3::{
     prelude::*,
     types::{PyBytes, PyLong, PyString, PyTuple},
 };
-use rocksdb::{self, DBRawIteratorWithThreadMode};
+use rocksdb::{self, DBIteratorWithThreadMode, DBRawIteratorWithThreadMode};
 
 #[pyclass(module = "hugedict.hugedict.rocksdb", subclass)]
 pub struct RocksDBDict {
@@ -102,8 +102,26 @@ impl RocksDBDict {
         convert_key!(self.impl_contains(; key ;))
     }
 
+    fn prefix_keys(
+        slf: PyRef<'_, Self>,
+        py: Python,
+        prefix: &PyAny,
+    ) -> PyResult<Py<DBPrefixKeyIterator>> {
+        let ptr = extend_lifetime_it(Box::new(
+            slf.db.prefix_iterator(pyser_key(prefix)?.as_ref().as_ref()),
+        ));
+        let deser_key = slf.deser_key.clone_ref(py);
+
+        let it = DBPrefixKeyIterator {
+            db: slf.into(),
+            deser_key,
+            it: ptr,
+        };
+        Ok(Py::new(py, it)?)
+    }
+
     fn keys(slf: PyRef<'_, Self>, py: Python) -> PyResult<Py<DBKeyIterator>> {
-        let mut ptr = extend_lifetime(Box::new(slf.db.raw_iterator()));
+        let mut ptr = extend_lifetime_raw_it(Box::new(slf.db.raw_iterator()));
         ptr.as_mut().seek_to_first();
         let deser_key = slf.deser_key.clone_ref(py);
         let it = DBKeyIterator {
@@ -115,7 +133,7 @@ impl RocksDBDict {
     }
 
     fn values(slf: PyRef<'_, Self>, py: Python) -> PyResult<Py<DBValueIterator>> {
-        let mut ptr = extend_lifetime(Box::new(slf.db.raw_iterator()));
+        let mut ptr = extend_lifetime_raw_it(Box::new(slf.db.raw_iterator()));
         ptr.as_mut().seek_to_first();
         let deser_value = slf.deser_value.clone_ref(py);
         let it = DBValueIterator {
@@ -126,8 +144,28 @@ impl RocksDBDict {
         Ok(Py::new(py, it)?)
     }
 
+    fn prefix_items(
+        slf: PyRef<'_, Self>,
+        py: Python,
+        prefix: &PyAny,
+    ) -> PyResult<Py<DBPrefixItemIterator>> {
+        let ptr = extend_lifetime_it(Box::new(
+            slf.db.prefix_iterator(pyser_key(prefix)?.as_ref().as_ref()),
+        ));
+        let deser_key = slf.deser_key.clone_ref(py);
+        let deser_value = slf.deser_value.clone_ref(py);
+
+        let it = DBPrefixItemIterator {
+            db: slf.into(),
+            deser_key,
+            deser_value,
+            it: ptr,
+        };
+        Ok(Py::new(py, it)?)
+    }
+
     fn items(slf: PyRef<'_, Self>, py: Python) -> PyResult<Py<DBItemIterator>> {
-        let mut ptr = extend_lifetime(Box::new(slf.db.raw_iterator()));
+        let mut ptr = extend_lifetime_raw_it(Box::new(slf.db.raw_iterator()));
         ptr.as_mut().seek_to_first();
         let deser_key = slf.deser_key.clone_ref(py);
         let deser_value = slf.deser_value.clone_ref(py);
@@ -326,12 +364,22 @@ pub fn pydeser_value<V: AsRef<[u8]>>(val: V, deser: &Py<PyAny>, py: Python) -> P
 /// More information can see DBKeyiterator.
 /// Note: since the iterator after extending loss the connection with the DB instance, you must ensure
 /// the iterator is dropped before the DB instance (the default dropped order is the declaration order).
-pub fn extend_lifetime(
+pub fn extend_lifetime_raw_it(
     x: Box<DBRawIteratorWithThreadMode<'_, rocksdb::DB>>,
 ) -> Box<DBRawIteratorWithThreadMode<'static, rocksdb::DB>> {
     unsafe {
         Box::from_raw(
             Box::into_raw(x) as usize as *mut DBRawIteratorWithThreadMode<'static, rocksdb::DB>
+        )
+    }
+}
+
+pub fn extend_lifetime_it(
+    x: Box<DBIteratorWithThreadMode<'_, rocksdb::DB>>,
+) -> Box<DBIteratorWithThreadMode<'static, rocksdb::DB>> {
+    unsafe {
+        Box::from_raw(
+            Box::into_raw(x) as usize as *mut DBIteratorWithThreadMode<'static, rocksdb::DB>
         )
     }
 }
@@ -358,6 +406,31 @@ impl DBKeyIterator {
                 let next = pydeser_value(k, &slf.deser_key, py)?;
                 slf.it.next();
                 return Ok(Some(next));
+            }
+        }
+    }
+}
+
+#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[allow(unused)]
+struct DBPrefixKeyIterator {
+    it: Box<DBIteratorWithThreadMode<'static, rocksdb::DB>>,
+    deser_key: Py<PyAny>,
+    db: Py<RocksDBDict>,
+}
+
+#[pymethods]
+impl DBPrefixKeyIterator {
+    fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __next__(mut slf: PyRefMut<'_, Self>, py: Python) -> PyResult<Option<PyObject>> {
+        match slf.it.next() {
+            None => Ok(None),
+            Some((k, _v)) => {
+                let next = pydeser_value(k, &slf.deser_key, py)?;
+                Ok(Some(next))
             }
         }
     }
@@ -414,6 +487,33 @@ impl DBItemIterator {
                 Ok(Some((key, value)))
             }
             _ => unreachable!(),
+        }
+    }
+}
+
+#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[allow(unused)]
+struct DBPrefixItemIterator {
+    it: Box<DBIteratorWithThreadMode<'static, rocksdb::DB>>,
+    deser_key: Py<PyAny>,
+    deser_value: Py<PyAny>,
+    db: Py<RocksDBDict>,
+}
+
+#[pymethods]
+impl DBPrefixItemIterator {
+    fn __iter__(slf: PyRef<'_, Self>) -> PyRef<'_, Self> {
+        slf
+    }
+
+    fn __next__(mut slf: PyRefMut<'_, Self>, py: Python) -> PyResult<Option<(PyObject, PyObject)>> {
+        match slf.it.next() {
+            None => Ok(None),
+            Some((k, v)) => {
+                let key = pydeser_value(k, &slf.deser_key, py)?;
+                let value = pydeser_value(v, &slf.deser_value, py)?;
+                Ok(Some((key, value)))
+            }
         }
     }
 }
