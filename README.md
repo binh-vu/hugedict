@@ -29,6 +29,8 @@ mapping: MutableMapping[str, str] = RocksDBDict(
     deser_value=artial(str, encoding="utf-8"),  # decode the value from memoryview
     ser_value=str.encode,  # encode the value to bytes
     readonly=False,  # open database in read only mode
+    secondary_mode=False,  # open database in secondary mode
+    secondary_path=None,  # when secondary_mode is True, it's a string pointing to a directory for storing data required to operate in secondary mode
 )
 ```
 
