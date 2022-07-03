@@ -131,3 +131,17 @@ class TestRocksDBDict(TestMutableMappingSuite):
         secondary_db.try_catch_up_with_primary()
         for k, v in new_items:
             assert secondary_db[k] == v
+    
+    def test_prefix_keys(self, mapping: RocksDBDict):
+        """`prefix_keys` is not public and should be avoided"""
+        prefix_counter = 0
+        nonprefix_counter = 0
+        for k in mapping.prefix_keys("P7"):  # type: ignore
+            if k.startswith("P7"):
+                prefix_counter += 1
+            else:
+                nonprefix_counter += 1
+        
+        assert prefix_counter > 0
+        assert nonprefix_counter > 0
+        assert prefix_counter + nonprefix_counter < len(mapping)
