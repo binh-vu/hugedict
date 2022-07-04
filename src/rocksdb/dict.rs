@@ -102,24 +102,6 @@ impl RocksDBDict {
         convert_key!(self.impl_contains(; key ;))
     }
 
-    fn prefix_keys(
-        slf: PyRef<'_, Self>,
-        py: Python,
-        prefix: &PyAny,
-    ) -> PyResult<Py<DBPrefixKeyIterator>> {
-        let ptr = extend_lifetime_it(Box::new(
-            slf.db.prefix_iterator(pyser_key(prefix)?.as_ref().as_ref()),
-        ));
-        let deser_key = slf.deser_key.clone_ref(py);
-
-        let it = DBPrefixKeyIterator {
-            db: slf.into(),
-            deser_key,
-            it: ptr,
-        };
-        Ok(Py::new(py, it)?)
-    }
-
     fn keys(slf: PyRef<'_, Self>, py: Python) -> PyResult<Py<DBKeyIterator>> {
         let mut ptr = extend_lifetime_raw_it(Box::new(slf.db.raw_iterator()));
         ptr.as_mut().seek_to_first();
@@ -140,26 +122,6 @@ impl RocksDBDict {
             db: slf.into(),
             it: ptr,
             deser_value,
-        };
-        Ok(Py::new(py, it)?)
-    }
-
-    fn prefix_items(
-        slf: PyRef<'_, Self>,
-        py: Python,
-        prefix: &PyAny,
-    ) -> PyResult<Py<DBPrefixItemIterator>> {
-        let ptr = extend_lifetime_it(Box::new(
-            slf.db.prefix_iterator(pyser_key(prefix)?.as_ref().as_ref()),
-        ));
-        let deser_key = slf.deser_key.clone_ref(py);
-        let deser_value = slf.deser_value.clone_ref(py);
-
-        let it = DBPrefixItemIterator {
-            db: slf.into(),
-            deser_key,
-            deser_value,
-            it: ptr,
         };
         Ok(Py::new(py, it)?)
     }
@@ -198,6 +160,56 @@ impl RocksDBDict {
         self.db
             .put(key.as_bytes(), value.as_bytes())
             .map_err(into_pyerr)
+    }
+
+    /// Seek to the first key that matches the *entire* prefix. From
+    /// there, the itereator will continue to read pairs as long as the
+    /// prefix extracted from `key` matches the prefix extracted from `prefix`.
+    ///
+    /// Note: for this function to always iterate over keys that match the *entire*
+    /// prefix, set options.prefix_extractor to the length of the prefix.
+    fn seek_keys(
+        slf: PyRef<'_, Self>,
+        py: Python,
+        prefix: &PyAny,
+    ) -> PyResult<Py<DBPrefixKeyIterator>> {
+        let ptr = extend_lifetime_it(Box::new(
+            slf.db.prefix_iterator(pyser_key(prefix)?.as_ref().as_ref()),
+        ));
+        let deser_key = slf.deser_key.clone_ref(py);
+
+        let it = DBPrefixKeyIterator {
+            db: slf.into(),
+            deser_key,
+            it: ptr,
+        };
+        Ok(Py::new(py, it)?)
+    }
+
+    /// Seek to the first key that matches the *entire* prefix. From
+    /// there, the itereator will continue to read pairs as long as the
+    /// prefix extracted from `key` matches the prefix extracted from `prefix`.
+    ///
+    /// Note: for this function to always iterate over keys that match the *entire*
+    /// prefix, set options.prefix_extractor to the length of the prefix.
+    fn seek_items(
+        slf: PyRef<'_, Self>,
+        py: Python,
+        prefix: &PyAny,
+    ) -> PyResult<Py<DBPrefixItemIterator>> {
+        let ptr = extend_lifetime_it(Box::new(
+            slf.db.prefix_iterator(pyser_key(prefix)?.as_ref().as_ref()),
+        ));
+        let deser_key = slf.deser_key.clone_ref(py);
+        let deser_value = slf.deser_value.clone_ref(py);
+
+        let it = DBPrefixItemIterator {
+            db: slf.into(),
+            deser_key,
+            deser_value,
+            it: ptr,
+        };
+        Ok(Py::new(py, it)?)
     }
 
     #[args(start = "None", end = "None")]

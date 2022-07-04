@@ -5,9 +5,11 @@ use pyo3::{
 };
 use rocksdb::{
     DBCompactionStyle as RocksDBCompactionStyle, DBCompressionType as RocksDBCompressionType,
-    Options as RocksDBOptions,
+    Options as RocksDBOptions, SliceTransform,
 };
 use serde::{Deserialize, Serialize};
+
+use super::dict::pyser_key;
 
 #[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
 pub enum DBCompactionStyle {
@@ -85,6 +87,31 @@ impl From<DBCompressionType> for RocksDBCompressionType {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+pub enum PrefixExtractor {
+    FixedPrefixTransform(usize),
+}
+
+impl<'s> FromPyObject<'s> for PrefixExtractor {
+    fn extract(obj: &'s PyAny) -> PyResult<Self> {
+        match obj.getattr("type")?.downcast::<PyString>()?.to_str()? {
+            "fixed_prefix" => {
+                let prefix_length = obj.getattr("size")?.extract()?;
+                Ok(PrefixExtractor::FixedPrefixTransform(prefix_length))
+            }
+            "fixed_prefix_alike" => {
+                let prefix = obj.getattr("prefix")?;
+                let prefix_length = pyser_key(prefix)?.as_ref().as_ref().len();
+                Ok(PrefixExtractor::FixedPrefixTransform(prefix_length))
+            }
+            s => Err(PyErr::new::<PyValueError, _>(format!(
+                "Unknown prefix extractor: {}",
+                s
+            ))),
+        }
+    }
+}
+
 /// Checkout the list of options here:
 /// - https://github.com/facebook/rocksdb/blob/0e0a19832e5f1e3584590edf796abd05c484e649/include/rocksdb/options.h#L432
 /// - https://github.com/facebook/rocksdb/blob/main/include/rocksdb/advanced_options.h
@@ -111,6 +138,7 @@ pub struct Options {
     pub max_subcompactions: Option<u32>,
     pub compression_type: Option<DBCompressionType>,
     pub bottommost_compression_type: Option<DBCompressionType>,
+    pub prefix_extractor: Option<PrefixExtractor>,
 }
 
 #[pymethods]
@@ -135,7 +163,8 @@ impl Options {
         max_background_jobs = "None",
         max_subcompactions = "None",
         compression_type = "None",
-        bottommost_compression_type = "None"
+        bottommost_compression_type = "None",
+        prefix_extractor = "None"
     )]
     fn new(
         create_if_missing: Option<bool>,
@@ -156,6 +185,7 @@ impl Options {
         max_subcompactions: Option<u32>,
         compression_type: Option<DBCompressionType>,
         bottommost_compression_type: Option<DBCompressionType>,
+        prefix_extractor: Option<PrefixExtractor>,
     ) -> Self {
         Options {
             create_if_missing: create_if_missing,
@@ -176,6 +206,7 @@ impl Options {
             max_subcompactions: max_subcompactions,
             compression_type: compression_type,
             bottommost_compression_type: bottommost_compression_type,
+            prefix_extractor: prefix_extractor,
         }
     }
 
@@ -208,6 +239,7 @@ impl Options {
         self.max_subcompactions = o.max_subcompactions;
         self.compression_type = o.compression_type;
         self.bottommost_compression_type = o.bottommost_compression_type;
+        self.prefix_extractor = o.prefix_extractor;
         Ok(())
     }
 }
@@ -268,6 +300,14 @@ impl Options {
         }
         if let Some(bottommost_compression_type) = self.bottommost_compression_type {
             opts.set_bottommost_compression_type(bottommost_compression_type.into());
+        }
+        if let Some(prefix_extractor) = self.prefix_extractor {
+            match prefix_extractor {
+                PrefixExtractor::FixedPrefixTransform(len) => {
+                    let extractor = SliceTransform::create_fixed_prefix(len);
+                    opts.set_prefix_extractor(extractor);
+                }
+            }
         }
         opts
     }
