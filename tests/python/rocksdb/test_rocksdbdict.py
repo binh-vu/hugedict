@@ -72,6 +72,11 @@ class TestRocksDBDict(TestMutableMappingSuite):
         assert hasattr(mapping, "deser_value")
         assert hasattr(mapping, "ser_value")
 
+    def test_estimate_num_keys(self, mapping: RocksDBDict):
+        # we create database from scratch, we haven't update/delete any key so the
+        # estimation should be correct
+        assert mapping.get_int_property("rocksdb.estimate-num-keys") == len(mapping)
+
     def test__put(self, mapping: RocksDBDict, new_items: List[tuple]):
         for k, v in new_items:
             mapping._put(k.encode(), v.encode())
@@ -79,14 +84,16 @@ class TestRocksDBDict(TestMutableMappingSuite):
         for k, v in new_items:
             assert mapping[k] == v
 
-    def test_open_readonly(self, wdprops: Path, existed_items: List[tuple], new_items: List[tuple]):
+    def test_open_readonly(
+        self, wdprops: Path, existed_items: List[tuple], new_items: List[tuple]
+    ):
         db = RocksDBDict(
             str(wdprops),
             Options(),
             deser_key=partial(str, encoding="utf-8"),
             deser_value=partial(str, encoding="utf-8"),
             ser_value=str.encode,
-            readonly=True
+            readonly=True,
         )
 
         for k, v in existed_items:
@@ -97,7 +104,13 @@ class TestRocksDBDict(TestMutableMappingSuite):
             with pytest.raises(RuntimeError):
                 db[k] = v
 
-    def test_open_secondary_mode(self, wdprops: Path, tmp_path: Path, existed_items: List[tuple], new_items: List[tuple]):
+    def test_open_secondary_mode(
+        self,
+        wdprops: Path,
+        tmp_path: Path,
+        existed_items: List[tuple],
+        new_items: List[tuple],
+    ):
         primary_db = RocksDBDict(
             str(wdprops),
             Options(),
@@ -131,11 +144,11 @@ class TestRocksDBDict(TestMutableMappingSuite):
         secondary_db.try_catch_up_with_primary()
         for k, v in new_items:
             assert secondary_db[k] == v
-    
+
     def test_seek_iterators(self, wdprops: Path):
-        deser_key=partial(str, encoding="utf-8")
-        deser_value=partial(str, encoding="utf-8")
-        ser_value=str.encode
+        deser_key = partial(str, encoding="utf-8")
+        deser_value = partial(str, encoding="utf-8")
+        ser_value = str.encode
 
         get_db = lambda opts: RocksDBDict(
             str(wdprops),
@@ -158,7 +171,7 @@ class TestRocksDBDict(TestMutableMappingSuite):
             else:
                 nonprefix_counter += 1
             assert k in subitems and subitems.pop(k) == db[k]
-            
+
         assert len(subitems) == 0
         assert prefix_counter > 0
         assert nonprefix_counter > 0
@@ -167,7 +180,13 @@ class TestRocksDBDict(TestMutableMappingSuite):
         del db
 
         # get correct results with prefix_extractor
-        db = get_db(Options(prefix_extractor=fixed_prefix_alike(type="fixed_prefix_alike", prefix="P7")))
+        db = get_db(
+            Options(
+                prefix_extractor=fixed_prefix_alike(
+                    type="fixed_prefix_alike", prefix="P7"
+                )
+            )
+        )
         prefix_counter = 0
         subitems = dict(db.seek_items("P7"))
         for k in db.seek_keys("P7"):
@@ -176,4 +195,3 @@ class TestRocksDBDict(TestMutableMappingSuite):
             assert k in subitems and subitems.pop(k) == db[k]
         assert prefix_counter > 0
         assert len(subitems) == 0
-    

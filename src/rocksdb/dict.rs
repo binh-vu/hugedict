@@ -162,6 +162,13 @@ impl RocksDBDict {
             .map_err(into_pyerr)
     }
 
+    /// Retrieves a RocksDB property's value and cast it to an integer.
+    ///
+    /// Full list of properties that return int values could be find [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L428-L634).
+    fn get_int_property(&self, name: &str) -> PyResult<Option<u64>> {
+        self.db.property_int_value(name).map_err(into_pyerr)
+    }
+
     /// Seek to the first key that matches the *entire* prefix. From
     /// there, the itereator will continue to read pairs as long as the
     /// prefix extracted from `key` matches the prefix extracted from `prefix`.

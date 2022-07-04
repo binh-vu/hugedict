@@ -23,15 +23,12 @@ DBCompressionStyle = Literal[
     "zstd",
 ]
 
-class PrefixExtractor:
-    ...
+class PrefixExtractor: ...
 
-def fixed_prefix(*, type: Literal["fixed_prefix"], size: int) -> PrefixExtractor:
-    ...
-def fixed_prefix_alike(*, type: Literal["fixed_prefix_alike"], prefix: str) -> PrefixExtractor:
-    ...
-
-
+def fixed_prefix(*, type: Literal["fixed_prefix"], size: int) -> PrefixExtractor: ...
+def fixed_prefix_alike(
+    *, type: Literal["fixed_prefix_alike"], prefix: str
+) -> PrefixExtractor: ...
 @dataclass
 class Options:
     create_if_missing: Optional[bool] = None
@@ -130,6 +127,48 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         """Serialize value to bytes."""
     def _put(self, k: bytes, v: bytes):
         """Put the raw (bytes) key and value into the database."""
+    def get_int_property(
+        self,
+        name: Literal[
+            "rocksdb.num-immutable-mem-table",
+            "rocksdb.mem-table-flush-pending",
+            "rocksdb.compaction-pending",
+            "rocksdb.background-errors",
+            "rocksdb.cur-size-active-mem-table",
+            "rocksdb.cur-size-all-mem-tables",
+            "rocksdb.size-all-mem-tables",
+            "rocksdb.num-entries-active-mem-table",
+            "rocksdb.num-entries-imm-mem-tables",
+            "rocksdb.num-deletes-active-mem-table",
+            "rocksdb.num-deletes-imm-mem-tables",
+            "rocksdb.estimate-num-keys",
+            "rocksdb.estimate-table-readers-mem",
+            "rocksdb.is-file-deletions-enabled",
+            "rocksdb.num-snapshots",
+            "rocksdb.oldest-snapshot-time",
+            "rocksdb.num-live-versions",
+            "rocksdb.current-super-version-number",
+            "rocksdb.estimate-live-data-size",
+            "rocksdb.min-log-number-to-keep",
+            "rocksdb.min-obsolete-sst-number-to-keep",
+            "rocksdb.total-sst-files-size",
+            "rocksdb.live-sst-files-size",
+            "rocksdb.base-level",
+            "rocksdb.estimate-pending-compaction-bytes",
+            "rocksdb.num-running-compactions",
+            "rocksdb.num-running-flushes",
+            "rocksdb.actual-delayed-write-rate",
+            "rocksdb.is-write-stopped",
+            "rocksdb.estimate-oldest-key-time",
+            "rocksdb.block-cache-capacity",
+            "rocksdb.block-cache-usage",
+            "rocksdb.block-cache-pinned-usage",
+        ],
+    ) -> Optional[int]:
+        """Retrieves a RocksDB property's value and cast it to an integer.
+
+        Full list of properties that return int values could be find [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L654-L689).
+        """
     def seek_keys(self, prefix: KP) -> Iterator[KP]:
         """Seek to the first key that matches the *entire* prefix. From
         there, the itereator will continue to read pairs as long as the
@@ -142,7 +181,7 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         """Seek to the first key that matches the *entire* prefix. From
         there, the itereator will continue to read pairs as long as the
         prefix extracted from `key` matches the prefix extracted from `prefix`.
-        
+
         Note: for this function to always iterate over keys that match the *entire*
         prefix, set options.prefix_extractor to the length of the prefix.
         """
