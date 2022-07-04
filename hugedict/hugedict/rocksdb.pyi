@@ -23,6 +23,15 @@ DBCompressionStyle = Literal[
     "zstd",
 ]
 
+class PrefixExtractor:
+    ...
+
+def fixed_prefix(*, type: Literal["fixed_prefix"], size: int) -> PrefixExtractor:
+    ...
+def fixed_prefix_alike(*, type: Literal["fixed_prefix_alike"], prefix: str) -> PrefixExtractor:
+    ...
+
+
 @dataclass
 class Options:
     create_if_missing: Optional[bool] = None
@@ -43,6 +52,7 @@ class Options:
     max_subcompactions: Optional[int] = None
     compression_type: Optional[DBCompressionStyle] = None
     bottommost_compression_type: Optional[DBCompressionStyle] = None
+    prefix_extractor: Optional[PrefixExtractor] = None
 
 class FileFormat(TypedDict):
     record_type: RecordType
@@ -120,12 +130,22 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         """Serialize value to bytes."""
     def _put(self, k: bytes, v: bytes):
         """Put the raw (bytes) key and value into the database."""
-    # RocksDB seems only provide prefix seek (https://github.com/facebook/rocksdb/wiki/Prefix-Seek)
-    # currently, I haven't got any idea or do research to find an efficient implementation.
-    # def prefix_keys(self, prefix: KP) -> Iterator[KP]:
-    #     """Iterate over keys that have the given prefix."""
-    # def prefix_items(self, prefix: KP) -> Iterator[Tuple[KP, V]]:
-    #     """Iterate over items which keys have the given prefix"""
+    def seek_keys(self, prefix: KP) -> Iterator[KP]:
+        """Seek to the first key that matches the *entire* prefix. From
+        there, the itereator will continue to read pairs as long as the
+        prefix extracted from `key` matches the prefix extracted from `prefix`.
+
+        Note: for this function to always iterate over keys that match the *entire*
+        prefix, set options.prefix_extractor to the length of the prefix.
+        """
+    def seek_items(self, prefix: KP) -> Iterator[Tuple[KP, V]]:
+        """Seek to the first key that matches the *entire* prefix. From
+        there, the itereator will continue to read pairs as long as the
+        prefix extracted from `key` matches the prefix extracted from `prefix`.
+        
+        Note: for this function to always iterate over keys that match the *entire*
+        prefix, set options.prefix_extractor to the length of the prefix.
+        """
     def compact(self, start: Optional[KP], end: Optional[KP]):
         """Compact the database on the range of keys"""
     def try_catch_up_with_primary(self):

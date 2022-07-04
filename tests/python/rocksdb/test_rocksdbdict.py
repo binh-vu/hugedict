@@ -1,9 +1,9 @@
 from functools import partial
 from pathlib import Path
-from typing import Generic, List, Mapping, Tuple
+from typing import List, Mapping
 import pytest
 from hugedict.cachedict import CacheDict
-from hugedict.hugedict.rocksdb import RocksDBDict, Options
+from hugedict.hugedict.rocksdb import RocksDBDict, Options, fixed_prefix_alike
 from tests.python.test_mapping import TestMutableMappingSuite
 
 
@@ -132,16 +132,48 @@ class TestRocksDBDict(TestMutableMappingSuite):
         for k, v in new_items:
             assert secondary_db[k] == v
     
-    def test_prefix_keys(self, mapping: RocksDBDict):
-        """`prefix_keys` is not public and should be avoided"""
+    def test_seek_iterators(self, wdprops: Path):
+        deser_key=partial(str, encoding="utf-8")
+        deser_value=partial(str, encoding="utf-8")
+        ser_value=str.encode
+
+        get_db = lambda opts: RocksDBDict(
+            str(wdprops),
+            opts,
+            deser_key=deser_key,
+            deser_value=deser_value,
+            ser_value=ser_value,
+        )
+
+        # default opts without prefix_extractor will also yield keys not matched the entired prefix
+        db = get_db(Options())
+
         prefix_counter = 0
         nonprefix_counter = 0
-        for k in mapping.prefix_keys("P7"):  # type: ignore
+
+        subitems = dict(db.seek_items("P7"))
+        for k in db.seek_keys("P7"):
             if k.startswith("P7"):
                 prefix_counter += 1
             else:
                 nonprefix_counter += 1
-        
+            assert k in subitems and subitems.pop(k) == db[k]
+            
+        assert len(subitems) == 0
         assert prefix_counter > 0
         assert nonprefix_counter > 0
-        assert prefix_counter + nonprefix_counter < len(mapping)
+        assert prefix_counter + nonprefix_counter < len(db)
+
+        del db
+
+        # get correct results with prefix_extractor
+        db = get_db(Options(prefix_extractor=fixed_prefix_alike(type="fixed_prefix_alike", prefix="P7")))
+        prefix_counter = 0
+        subitems = dict(db.seek_items("P7"))
+        for k in db.seek_keys("P7"):
+            assert k.startswith("P7")
+            prefix_counter += 1
+            assert k in subitems and subitems.pop(k) == db[k]
+        assert prefix_counter > 0
+        assert len(subitems) == 0
+    
