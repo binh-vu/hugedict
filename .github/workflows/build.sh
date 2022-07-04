@@ -34,16 +34,23 @@ echo "::group::Setup build tools"
 # ##############################################
 # to build rocksdb, we need CLang and LLVM
 echo "Install CLang and LLVM"
-if ! command -v yum &> /dev/null
-then
-    # debian
-    apt update
-    apt install -y clang-11
+if [[ "$OSTYPE" == "linux-gnu"* ]]; then
+    if ! command -v yum &> /dev/null
+    then
+        # debian
+        apt update
+        apt install -y clang-11
+    else
+        # centos
+        # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
+        yum install -y llvm-toolset-7
+        source /opt/rh/llvm-toolset-7/enable
+    fi
+elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "Skip on MacOS. Assuming you have CLang and LLVM installed."    
 else
-    # centos
-    # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
-    yum install -y llvm-toolset-7
-    source /opt/rh/llvm-toolset-7/enable
+    echo "Unsupported OS: $OSTYPE"
+    exit 1
 fi
 
 # ##############################################
@@ -66,8 +73,18 @@ fi
 echo "::endgroup::"
 echo
 
+# ##############################################
+echo "Install Maturin"
+if ! command -v maturin &> /dev/null
+then
+    pip install maturin
+else
+    echo "Maturin is already installed."
+fi
+
+# ##############################################
 echo "::group::Discovering Python"
-IFS=',' read -a PYTHON_HOMES <<< $(MINIMUM_PYTHON_VERSION=3.8 python $SCRIPT_DIR/pydiscovery.py)
+IFS=':' read -a PYTHON_HOMES < <(MINIMUM_PYTHON_VERSION=3.8 python $SCRIPT_DIR/pydiscovery.py)
 if [ ${#PYTHON_HOMES[@]} -eq 0 ]; then
     echo "No Python found. Did you forget to set any environment variable PYTHON_HOME or PYTHON_HOMES?"
 else
@@ -79,15 +96,13 @@ fi
 echo "::endgroup::"
 echo
 
+# ##############################################
 for PYTHON_HOME in "${PYTHON_HOMES[@]}"
 do
     echo "::group::Building for Python $PYTHON_HOME"
 
-    echo "Run: $PYTHON_HOME/bin/pip install maturin"    
-    "$PYTHON_HOME/bin/pip" install maturin
-
-    echo "Run: $PYTHON_HOME/bin/maturin build -r -o dist -i $PYTHON_HOME/bin/python --target $target"
-    "$PYTHON_HOME/bin/maturin" build -r -o dist -i "$PYTHON_HOME/bin/python" --target $target
+    echo "Run: maturin build -r -o dist -i $PYTHON_HOME/bin/python3 --target $target"
+    "maturin" build -r -o dist -i "$PYTHON_HOME/bin/python3" --target $target
 
     echo "::endgroup::"
     echo
