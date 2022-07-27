@@ -1,4 +1,4 @@
-.. include:: glossary
+.. include:: glossary.rst
 
 Getting Started
 ===============
