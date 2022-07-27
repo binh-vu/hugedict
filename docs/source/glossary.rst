@@ -1,0 +1,1 @@
+.. |hugedict| replace:: `hugedict <https://hugedict.readthedocs.io/>`__

@@ -97,7 +97,7 @@ def load(
 class RocksDBDict(HugeMutableMapping[KP, V]):
     """A mutable mapping backed by rocksdb.
 
-    Arguments:
+    Args:
         path: path to rocksdb database
         opts: rocksdb options
         deser_key: deserialize key from a memoryview

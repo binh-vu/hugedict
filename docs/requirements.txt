@@ -1,0 +1,9 @@
+furo>=2022.6.21,<2023.0.0
+sphinx>=5.0.2,<5.1.0
+sphinxcontrib.katex
+matplotlib
+sphinx-copybutton
+sphinx-panels
+sphinx-autodoc-typehints
+myst-parser==0.18.0
+sphinx-autobuild  # needed for doc development

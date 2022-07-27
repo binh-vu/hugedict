@@ -1,6 +1,8 @@
-# hugedict ![PyPI](https://img.shields.io/pypi/v/hugedict)
+# hugedict ![PyPI](https://img.shields.io/pypi/v/hugedict) ![Documentation](https://readthedocs.org/projects/hugedict/badge/?version=latest&style=flat)
 
-A dictionary-like object that is friendly with multiprocessing and uses key-value databases (e.g., RocksDB) as the underlying storage.
+hugedict provides a drop-in replacement for dictionary objects that are too big to fit in memory. hugedict's dictionary-like objects implement `typing.Mapping` and `typing.MutableMapping` interfaces using key-value databases (e.g., RocksDB) as the underlying storage. Moreover, they are friendly with Python's multiprocessing.
+
+- [Documentation](https://hugedict.readthedocs.io/)
 
 ## Installation
 
@@ -26,7 +28,7 @@ mapping: MutableMapping[str, str] = RocksDBDict(
     path=dbpath,  # path (str) to db file
     options=RocksDBOptions(create_if_missing=create_if_missing),  # whether to create database if missing, check other options
     deser_key=partial(str, encoding="utf-8"),  # decode the key from memoryview
-    deser_value=artial(str, encoding="utf-8"),  # decode the value from memoryview
+    deser_value=partial(str, encoding="utf-8"),  # decode the value from memoryview
     ser_value=str.encode,  # encode the value to bytes
     readonly=False,  # open database in read only mode
     secondary_mode=False,  # open database in secondary mode
