@@ -39,6 +39,8 @@ Otherwise, you can build a wheel and install it
     maturin build -r -o dist
     pip install dist/hugedict-*.whl
 
+You can also consult the :source:`containers/manylinux2014_x86_64/Dockerfile` for guidance to install from scratch.
+
 Usage
 -----
 

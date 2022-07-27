@@ -10,7 +10,6 @@
 
 .. toctree::
    :maxdepth: 2
-   :hidden:
    :caption: Contents:
 
    getting-started
