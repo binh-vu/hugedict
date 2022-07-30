@@ -1,0 +1,4 @@
+orjson
+loguru
+tqdm
+zstandard

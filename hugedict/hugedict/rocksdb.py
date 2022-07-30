@@ -23,12 +23,12 @@ DBCompressionStyle = Literal[
     "zstd",
 ]
 
-class PrefixExtractor: ...
+class PrefixExtractor: pass
 
-def fixed_prefix(*, type: Literal["fixed_prefix"], size: int) -> PrefixExtractor: ...
+def fixed_prefix(*, type: Literal["fixed_prefix"], size: int) -> PrefixExtractor: pass
 def fixed_prefix_alike(
     *, type: Literal["fixed_prefix_alike"], prefix: str
-) -> PrefixExtractor: ...
+) -> PrefixExtractor: pass
 @dataclass
 class Options:
     create_if_missing: Optional[bool] = None
@@ -118,7 +118,7 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         readonly: bool = False,
         secondary_mode: bool = False,
         secondary_path: Optional[str] = None,
-    ): ...
+    ): pass
     @property
     def deser_value(self) -> Callable[[memoryview], V]:
         """Deserialize value from a memoryview."""
@@ -218,13 +218,13 @@ class SecondaryDB(Generic[KP, V]):
         opts: Options,
         deser_value: Callable[[memoryview], V],
         ser_value: Callable[[V], bytes],
-    ): ...
+    ): pass
     def __getitem__(self, key: KP) -> V:
         """Get key from database"""
-        ...
+        pass
     def __setitem__(self, key: KP, value: V) -> None:
         """Put key and value to database"""
-        ...
+        pass
     def __contains__(self, key: KP) -> bool:
         """Check if key is in database"""
-        ...
+        pass
