@@ -9,3 +9,6 @@ Python APIs
     hugedict.cachedict
     hugedict.chained_mappings
     hugedict.misc
+    hugedict.hugedict
+    hugedict.parallel
+    hugedict.prelude
