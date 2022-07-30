@@ -8,8 +8,10 @@
 |hugedict| documentation
 ====================================
 
+|hugedict| provides a drop-in replacement for dictionary objects that are too big to fit in memory. |hugedict|'s dictionary-like objects implement :py:class:`typing.Mapping` and :py:class:`typing.MutableMapping` interfaces using key-value databases (e.g., RocksDB) as the underlying storage. Moreover, they are friendly with Python's multiprocessing.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    getting-started
@@ -22,8 +24,6 @@
 
    development
    changelog
-
-|hugedict| provides a drop-in replacement for dictionary objects that are too big to fit in memory. |hugedict|'s dictionary-like objects implement :py:class:`typing.Mapping` and :py:class:`typing.MutableMapping` interfaces using key-value databases (e.g., RocksDB) as the underlying storage. Moreover, they are friendly with Python's multiprocessing.
 
 Indices and tables
 ==================

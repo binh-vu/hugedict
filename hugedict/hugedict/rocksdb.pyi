@@ -51,11 +51,6 @@ class Options:
     bottommost_compression_type: Optional[DBCompressionStyle] = None
     prefix_extractor: Optional[PrefixExtractor] = None
 
-class FileFormat(TypedDict):
-    record_type: RecordType
-    # whether the file is sorted or not.
-    is_sorted: bool
-
 class RecordType(TypedDict):
     """
     tabsep:
@@ -74,6 +69,11 @@ class RecordType(TypedDict):
     key: Optional[str]
     # object's attribute contains the value, None if value is the object itself.
     value: Optional[str]
+
+class FileFormat(TypedDict):
+    record_type: RecordType
+    # whether the file is sorted or not.
+    is_sorted: bool
 
 def load(
     dbpath: str,
