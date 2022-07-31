@@ -81,3 +81,9 @@ Usage
 
 
     output = pp.map(heavy_computing, [0.5, 1, 0.7, 0.3, 0.6], n_processes=3)
+
+.. note::
+
+    If the process start method is ``fork``, then you may encounter an error when running ``pp.map`` multiple times, change the start method to ``spawn`` will solve the error. The reason is that somehow in my test, ``with Pool()`` seems to fork from previous forked processes. As fork is not safe for libraries that use locks, the ``nng`` library throws an error saying it
+    is not fork re-entrant safe.
+

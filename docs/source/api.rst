@@ -7,7 +7,7 @@ Python APIs
     
     hugedict.types
     hugedict.cachedict
-    hugedict.chained_mappings
+    hugedict.chained_mapping
     hugedict.misc
     hugedict.hugedict
     hugedict.parallel

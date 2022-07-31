@@ -229,8 +229,8 @@ impl SecondaryDB {
         ser_value: Py<PyAny>,
     ) -> Result<Self> {
         let socket = dial(url)?;
-        let db = rocksdb::DB::open_as_secondary(&options.get_options(), primary_path, secondary_path)?;
-
+        let db =
+            rocksdb::DB::open_as_secondary(&options.get_options(), primary_path, secondary_path)?;
         Ok(Self {
             db,
             socket,

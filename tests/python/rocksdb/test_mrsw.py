@@ -1,35 +1,25 @@
 from functools import partial
-from multiprocessing import Process, get_context
 from pathlib import Path
 
 from hugedict.hugedict.rocksdb import Options, SecondaryDB, primary_db, stop_primary_db
+from hugedict.parallel import LazyDBCacheFn
 
 
 def test_start_and_close_primary_db(wdprops: Path, url: str):
-    p = get_context("spawn").Process(
-        target=primary_db, args=(url, str(wdprops), Options())
-    )
-    p.start()
-
-    # # wait till primary db is ready
-    # time.sleep(1)
-
-    assert p.exitcode is None
+    p = LazyDBCacheFn._start_primary_db(url, str(wdprops), Options())
+    assert p.returncode is None
 
     # stop it
     stop_primary_db(url)
 
     # wait 3 seconds
-    p.join(3)
+    p.wait(3)
 
-    assert p.exitcode == 0
+    assert p.returncode == 0
 
 
 def test_primary_secondary_db(wdprops: Path, url: str):
-    p = get_context("spawn").Process(
-        target=primary_db, args=(url, str(wdprops), Options())
-    )
-    p.start()
+    p = LazyDBCacheFn._start_primary_db(url, str(wdprops), Options())
 
     db0 = SecondaryDB(
         url,
@@ -58,5 +48,5 @@ def test_primary_secondary_db(wdprops: Path, url: str):
     assert "P58" in db1
 
     stop_primary_db(url)
-    p.join(3)
-    assert p.exitcode == 0
+    p.wait(3)
+    assert p.returncode == 0

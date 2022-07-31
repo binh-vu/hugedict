@@ -362,7 +362,13 @@ class LazyDBCacheFn:
         )
         self.key = key or CacheFnKey.default_key
 
-        self.url = url or f"ipc://{self.dbpath.absolute()}/hugedict.ipc"
+        if url is not None:
+            self.url = url
+            self.socket_file = None
+        else:
+            self.socket_file = Path(f"/tmp/hugedict/{str(uuid4())}.ipc")
+            self.socket_file.parent.mkdir(parents=True, exist_ok=True)
+            self.url = f"ipc://{self.socket_file}"
 
     def run(self, *args, **kwargs):
         key = self.key(self.fn_name, args, kwargs)
@@ -403,24 +409,7 @@ class LazyDBCacheFn:
         self.is_mrsw = True
         self.cleanup()
 
-        commands = [
-            "import sys, json, base64, pickle",
-            "from hugedict.hugedict.rocksdb import primary_db",
-            "o = json.loads(sys.argv[1])",
-            'primary_db(o["url"], o["dbpath"], pickle.loads(base64.b64decode(o["dbopts"])))',
-        ]
-        command = ";".join(commands)
-        input = orjson.dumps(
-            {
-                "url": str(self.url),
-                "dbpath": str(self.dbpath),
-                "dbopts": base64.b64encode(pickle.dumps(self.dbopts)).decode(),
-            }
-        ).decode()
-
-        assert sys.executable is not None and len(sys.executable) > 0
-        p = subprocess.Popen([sys.executable, "-c", command, input])
-        return p
+        return self._start_primary_db(self.url, self.dbpath, self.dbopts)
 
     def stop_primary(self):
         self.is_mrsw = False
@@ -430,6 +419,37 @@ class LazyDBCacheFn:
         # clean previous directory if exists
         if (self.dbpath / self.SECONDARY_DIR).exists():
             shutil.rmtree(self.dbpath / self.SECONDARY_DIR)
+
+        if self.socket_file is not None and self.socket_file.exists():
+            self.socket_file.unlink()
+            self.socket_file = None
+
+        if self.db is not None:
+            self.db = None
+            gc.collect()
+
+    @staticmethod
+    def _start_primary_db(
+        url: str, dbpath: Union[str, Path], opts: Options
+    ) -> subprocess.Popen:
+        commands = [
+            "import sys, json, base64, pickle",
+            "from hugedict.hugedict.rocksdb import primary_db",
+            "o = json.loads(sys.argv[1])",
+            'primary_db(o["url"], o["dbpath"], pickle.loads(base64.b64decode(o["dbopts"])))',
+        ]
+        command = ";".join(commands)
+        input = orjson.dumps(
+            {
+                "url": url,
+                "dbpath": str(dbpath),
+                "dbopts": base64.b64encode(pickle.dumps(opts)).decode(),
+            }
+        ).decode()
+
+        assert sys.executable is not None and len(sys.executable) > 0
+        p = subprocess.Popen([sys.executable, "-c", command, input])
+        return p
 
 
 class CacheFnKey:

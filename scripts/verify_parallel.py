@@ -8,30 +8,38 @@ from hugedict.parallel import Parallel
 shutil.rmtree("/tmp/hugedict/test.db", ignore_errors=True)
 
 
-pp = Parallel()
-
-
-@pp.cache_func("/tmp/hugedict/test.db")
 def heavy_computing(seconds: float):
     time.sleep(seconds)
     return seconds * 2
 
 
-def run(seconds: float):
-    return heavy_computing(seconds)
-
-
 if __name__ == "__main__":
-    # print("@@", get_start_method())
-    # set_start_method("fork")
-    # freeze_support()
+    pp = Parallel()
+    heavy_computing1 = pp.cache_func("/tmp/hugedict/test.db", url="ipc:///tmp/abc.ipc")(
+        heavy_computing
+    )
 
     output = pp.map(
-        run,
+        heavy_computing1,
         [0.5, 1, 0.7, 0.3, 0.6],
-        n_processes=3,
+        n_processes=1,
         # use_threadpool=True,
         # is_parallel=False,
     )
 
     assert output == [1, 2, 1.4, 0.6, 1.2]
+    print(">>> done")
+    time.sleep(3)
+
+    pp2 = Parallel()
+    heavy_computing2 = pp2.cache_func(
+        "/tmp/hugedict/test.db", url="ipc:///tmp/test22.ipc"
+    )(heavy_computing)
+
+    output = pp2.map(
+        heavy_computing2,
+        [0.5, 1, 0.7, 0.3, 0.6],
+        n_processes=1,
+        # use_threadpool=True,
+        # is_parallel=False,
+    )
