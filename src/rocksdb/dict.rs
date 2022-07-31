@@ -12,6 +12,7 @@ use rocksdb::{self, DBIteratorWithThreadMode, DBRawIteratorWithThreadMode};
 #[pyclass(module = "hugedict.hugedict.rocksdb", subclass)]
 pub struct RocksDBDict {
     db: rocksdb::DB,
+    options: Options,
     deser_key: Py<PyAny>,
     deser_value: Py<PyAny>,
     ser_value: Py<PyAny>,
@@ -53,10 +54,16 @@ impl RocksDBDict {
 
         Ok(Self {
             db,
+            options: options.clone(),
             deser_key,
             deser_value,
             ser_value,
         })
+    }
+
+    #[getter]
+    fn options(&self) -> PyResult<Options> {
+        Ok(self.options.clone())
     }
 
     #[getter]

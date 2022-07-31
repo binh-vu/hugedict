@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use super::dict::pyser_key;
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DBCompactionStyle {
     Level,
     Universal,
@@ -43,7 +43,7 @@ impl From<DBCompactionStyle> for RocksDBCompactionStyle {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DBCompressionType {
     None,
     Snappy,
@@ -87,7 +87,7 @@ impl From<DBCompressionType> for RocksDBCompressionType {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum PrefixExtractor {
     FixedPrefixTransform(usize),
 }
@@ -116,7 +116,7 @@ impl<'s> FromPyObject<'s> for PrefixExtractor {
 /// - https://github.com/facebook/rocksdb/blob/0e0a19832e5f1e3584590edf796abd05c484e649/include/rocksdb/options.h#L432
 /// - https://github.com/facebook/rocksdb/blob/main/include/rocksdb/advanced_options.h
 /// - https://docs.rs/rocksdb/latest/rocksdb/struct.Options.html
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, Eq, PartialEq)]
 #[pyclass(module = "hugedict.hugedict.rocksdb")]
 pub struct Options {
     pub create_if_missing: Option<bool>,
