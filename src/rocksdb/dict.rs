@@ -156,6 +156,16 @@ impl RocksDBDict {
             .into())
     }
 
+    fn update_cache(slf: PyRef<'_, Self>, py: Python, obj: &PyAny) -> PyResult<Py<PyAny>> {
+        let this: Py<RocksDBDict> = slf.into();
+        let cache_dict = PyModule::import(py, "hugedict.cachedict")?
+            .getattr("CacheDict")?
+            .call1(PyTuple::new(py, [this]))?;
+
+        cache_dict.call_method1("update_cache", PyTuple::new(py, [obj]))?;
+        Ok(cache_dict.into())
+    }
+
     fn _put(&self, key: &PyBytes, value: &PyBytes) -> PyResult<()> {
         self.db
             .put(key.as_bytes(), value.as_bytes())

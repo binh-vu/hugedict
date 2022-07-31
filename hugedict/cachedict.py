@@ -1,5 +1,16 @@
 import os
-from typing import Dict, ItemsView, Iterator, KeysView, MutableMapping, ValuesView
+from typing import (
+    Dict,
+    ItemsView,
+    Iterator,
+    KeysView,
+    Mapping,
+    MutableMapping,
+    Sequence,
+    Tuple,
+    Union,
+    ValuesView,
+)
 from hugedict.types import K, V, HugeMutableMapping
 from copy import copy
 
@@ -52,3 +63,10 @@ class CacheDict(HugeMutableMapping[K, V]):
         # Return a clone of this object so that subsequence cache won't affect this object.
         cache._cache = copy(self._cache)
         return cache
+
+    def update_cache(
+        self, o: Union[Mapping[K, V], Sequence[Tuple[K, V]]]
+    ) -> "CacheDict[K, V]":
+        """Update the cache with the given mapping or iterator"""
+        self._cache.update(o)
+        return self

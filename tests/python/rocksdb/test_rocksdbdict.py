@@ -1,6 +1,6 @@
 from functools import partial
 from pathlib import Path
-from typing import List, Mapping
+from typing import List, Mapping, Tuple
 import pytest
 from hugedict.cachedict import CacheDict
 from hugedict.hugedict.rocksdb import RocksDBDict, Options, fixed_prefix_alike
@@ -67,6 +67,40 @@ class TestRocksDBDict(TestMutableMappingSuite):
         for k in [x[0] for x in new_items] + unknown_keys:
             assert k not in mapping
             assert k not in mcache
+
+    def test_update_cache1(
+        self,
+        mapping: RocksDBDict,
+        existed_items: List[tuple],
+        new_items: List[Tuple[str, str]],
+    ):
+        mcache = mapping.cache()
+        assert isinstance(mcache, CacheDict)
+
+        for k, v in existed_items:
+            assert k in mapping
+            assert k in mcache
+
+        mcache.update_cache(new_items)
+
+        for k, v in new_items:
+            assert k not in mapping
+            assert k in mcache
+
+    def test_update_cache2(
+        self,
+        mapping: RocksDBDict,
+        existed_items: List[tuple],
+        new_items: List[Tuple[str, str]],
+    ):
+        mcache = mapping.update_cache(new_items)
+        for k, v in existed_items:
+            assert k in mapping
+            assert k in mcache
+
+        for k, v in new_items:
+            assert k not in mapping
+            assert k in mcache
 
     def test_has_properties(self, mapping: RocksDBDict):
         assert hasattr(mapping, "deser_value")

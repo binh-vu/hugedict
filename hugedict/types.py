@@ -1,5 +1,14 @@
 from __future__ import annotations
-from typing import Callable, Mapping, MutableMapping, TypeVar, Union
+from typing import (
+    Callable,
+    Iterator,
+    Mapping,
+    MutableMapping,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+)
 from abc import abstractmethod
 
 
@@ -24,6 +33,13 @@ class HugeMapping(Mapping[K, V]):
         """
         pass
 
+    @abstractmethod
+    def update_cache(
+        self, o: Union[Mapping[K, V], Sequence[Tuple[K, V]]]
+    ) -> HugeMapping[K, V]:
+        """Update the cache with the given mapping or iterator"""
+        pass
+
 
 class HugeMutableMapping(MutableMapping[K, V]):
     @abstractmethod
@@ -31,4 +47,11 @@ class HugeMutableMapping(MutableMapping[K, V]):
         """Return a new mapping that will cache the results to
         avoid calling to an external mapping
         """
+        pass
+
+    @abstractmethod
+    def update_cache(
+        self, o: Union[Mapping[K, V], Sequence[Tuple[K, V]]]
+    ) -> HugeMapping[K, V]:
+        """Update the cache with the given mapping or iterator"""
         pass
