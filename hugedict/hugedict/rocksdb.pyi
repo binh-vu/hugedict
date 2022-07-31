@@ -29,6 +29,7 @@ def fixed_prefix(*, type: Literal["fixed_prefix"], size: int) -> PrefixExtractor
 def fixed_prefix_alike(
     *, type: Literal["fixed_prefix_alike"], prefix: str
 ) -> PrefixExtractor: ...
+
 @dataclass
 class Options:
     create_if_missing: Optional[bool] = None

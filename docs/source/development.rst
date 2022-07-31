@@ -26,6 +26,27 @@ Otherwise, you can build a wheel and install it
 
 You can also consult the :source:`containers/manylinux2014_x86_64/Dockerfile` for guidance to install from scratch.
 
+Running Tests
+-------------
+
+1. Rust tests
+
+.. code:: bash
+
+    cargo test --no-default-features --features pyo3/auto-initialize
+
+
+.. note::
+
+    If you encounter libpython not found, set ``LD_LIBRARY_PATH`` environment variable to point to ``<ANACONDA_HOME>/lib``
+
+2. Python tests
+
+.. code:: bash
+
+    python -m pytests -x tests
+
+
 Setup Documentation
 -------------------
 

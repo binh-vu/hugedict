@@ -10,13 +10,17 @@ from multiprocessing.context import SpawnProcess
 from multiprocessing.pool import ThreadPool
 from operator import itemgetter
 import os
+import subprocess
 from pathlib import Path
 import pickle
 import random
 import shutil
+import sys
+import signal
 import time
 from typing import Any, Callable, List, Literal, Optional, Union, MutableMapping, cast
 from uuid import uuid4
+import base64
 
 from loguru import logger
 import orjson
@@ -80,7 +84,7 @@ class Parallel:
 
     @contextmanager
     def switch_mrsw_cache(self):
-        primaries = []
+        primaries: List[subprocess.Popen] = []
         for cache in self.caches:
             primaries.append(cache.start_primary())
 
@@ -91,8 +95,8 @@ class Parallel:
                 cache.stop_primary()
 
         for primary in primaries:
-            primary.join(30)
-            assert primary.exitcode == 0
+            primary.wait(30)
+            assert primary.returncode == 0, primary.returncode
 
         for cache in self.caches:
             cache.cleanup()
@@ -392,17 +396,30 @@ class LazyDBCacheFn:
 
         return self.db[key]
 
-    def start_primary(self) -> Optional[SpawnProcess]:
+    def start_primary(self) -> subprocess.Popen:
         assert (
             self.db is None
         ), "Switching to Multi-read single-write mode must done before starting a primary instance"
         self.is_mrsw = True
         self.cleanup()
 
-        p = get_context("spawn").Process(
-            target=primary_db, args=(self.url, str(self.dbpath), self.dbopts)
-        )
-        p.start()
+        commands = [
+            "import sys, json, base64, pickle",
+            "from hugedict.hugedict.rocksdb import primary_db",
+            "o = json.loads(sys.argv[1])",
+            'primary_db(o["url"], o["dbpath"], pickle.loads(base64.b64decode(o["dbopts"])))',
+        ]
+        command = ";".join(commands)
+        input = orjson.dumps(
+            {
+                "url": str(self.url),
+                "dbpath": str(self.dbpath),
+                "dbopts": base64.b64encode(pickle.dumps(self.dbopts)).decode(),
+            }
+        ).decode()
+
+        assert sys.executable is not None and len(sys.executable) > 0
+        p = subprocess.Popen([sys.executable, "-c", command, input])
         return p
 
     def stop_primary(self):

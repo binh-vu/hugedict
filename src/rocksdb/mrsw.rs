@@ -20,7 +20,7 @@ use pyo3::{
 
 const CHECK_SIGNALS_INTERVAL: Duration = Duration::from_millis(100);
 const DIAL_RETRY_INTERVAL: Duration = Duration::from_millis(50);
-const DIAL_MAX_RETRIES: usize = 20; // one second
+const DIAL_MAX_RETRIES: usize = 200; // ten seconds
 
 #[derive(Debug)]
 pub enum ReqMsg<'s> {
@@ -229,8 +229,7 @@ impl SecondaryDB {
         ser_value: Py<PyAny>,
     ) -> Result<Self> {
         let socket = dial(url)?;
-        let db =
-            rocksdb::DB::open_as_secondary(&options.get_options(), primary_path, secondary_path)?;
+        let db = rocksdb::DB::open_as_secondary(&options.get_options(), primary_path, secondary_path)?;
 
         Ok(Self {
             db,
