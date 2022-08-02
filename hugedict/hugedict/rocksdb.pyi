@@ -30,6 +30,20 @@ def fixed_prefix_alike(
     *, type: Literal["fixed_prefix_alike"], prefix: str
 ) -> PrefixExtractor: ...
 
+# Compression options. See more:
+# - http://rocksdb.org/blog/2021/05/31/dictionary-compression.html
+# - https://github.com/facebook/rocksdb/wiki/Space-Tuning
+@dataclass
+class CompressionOptions:
+    window_bits: int
+    level: int
+    strategy: int
+    max_dict_bytes: int
+
+# Checkout the list of options here:
+# - https://github.com/facebook/rocksdb/blob/0e0a19832e5f1e3584590edf796abd05c484e649/include/rocksdb/options.h#L432
+# - https://github.com/facebook/rocksdb/blob/main/include/rocksdb/advanced_options.h
+# - https://docs.rs/rocksdb/latest/rocksdb/struct.Options.html
 @dataclass
 class Options:
     create_if_missing: Optional[bool] = None
@@ -48,9 +62,15 @@ class Options:
     disable_auto_compactions: Optional[bool] = None
     max_background_jobs: Optional[int] = None
     max_subcompactions: Optional[int] = None
-    compression_type: Optional[DBCompressionStyle] = None
+    compression_type: Optional[DBCompressionStyle] = "lz4"
     bottommost_compression_type: Optional[DBCompressionStyle] = None
     prefix_extractor: Optional[PrefixExtractor] = None
+    compression_opts: Optional[CompressionOptions] = None
+    bottommost_compression_opts: Optional[CompressionOptions] = None
+    # in here: http://rocksdb.org/blog/2021/05/31/dictionary-compression.html
+    # recommended to 100x of max_dict_bytes
+    zstd_max_train_bytes: Optional[int] = None
+    bottommost_zstd_max_train_bytes: Optional[int] = None
 
 class RecordType(TypedDict):
     """
@@ -65,7 +85,7 @@ class RecordType(TypedDict):
         each line is a json list of two items key and value, key and value are optional
     """
 
-    type: Literal["tabsep", "ndjson", "tuple2"]
+    type: Literal["tabsep", "ndjson", "tuple2", "bin_kv"]
     # object's attribute contains the key, None if key is the object itself.
     key: Optional[str]
     # object's attribute contains the value, None if value is the object itself.
@@ -86,12 +106,35 @@ def load(
 ) -> None:
     """Load files into rocksdb database by building SST files and ingesting them.
 
-    Arguments:
+    Args:
         dbpath: path to rocksdb database
         dbopts: rocksdb options
         infiles: list of input files
         format: file format
         verbose: whether to print progress
+        compact: whether to compact the database after loading
+    """
+
+def build_sst_file(
+    dbopts: Options,
+    outfile: str,
+    input_generator: Callable[[], Optional[Tuple[bytes, bytes]]],
+) -> None:
+    """Build SST file from the input generator
+
+    Args:
+        dbopts: rocksdb options
+        outfile: output file
+        input_generator: when the function is called, it should return a new key-value pair. when it returns None, the input is exhausted.
+    """
+
+def ingest_sst_files(dbpath: str, dbopts: Options, sst_files: List[str], compact: bool):
+    """Ingest SST files into rocksdb database.
+
+    Args:
+        dbpath: path to rocksdb database
+        dbopts: rocksdb options
+        sst_files: list of SST files
         compact: whether to compact the database after loading
     """
 

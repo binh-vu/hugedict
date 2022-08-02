@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use super::dict::pyser_key;
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DBCompactionStyle {
     Level,
     Universal,
@@ -43,7 +43,7 @@ impl From<DBCompactionStyle> for RocksDBCompactionStyle {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum DBCompressionType {
     None,
     Snappy,
@@ -87,7 +87,7 @@ impl From<DBCompressionType> for RocksDBCompressionType {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Serialize, Deserialize)]
 pub enum PrefixExtractor {
     FixedPrefixTransform(usize),
 }
@@ -112,11 +112,36 @@ impl<'s> FromPyObject<'s> for PrefixExtractor {
     }
 }
 
+/// Compression options. See more:
+/// - http://rocksdb.org/blog/2021/05/31/dictionary-compression.html
+/// - https://github.com/facebook/rocksdb/wiki/Space-Tuning
+#[derive(Deserialize, Serialize, Clone, Eq, PartialEq)]
+#[pyclass(module = "hugedict.hugedict.rocksdb")]
+pub struct CompressionOptions {
+    window_bits: i32,
+    level: i32,
+    strategy: i32,
+    max_dict_bytes: i32,
+}
+
+#[pymethods]
+impl CompressionOptions {
+    #[new]
+    fn new(window_bits: i32, level: i32, strategy: i32, max_dict_bytes: i32) -> Self {
+        CompressionOptions {
+            window_bits,
+            level,
+            strategy,
+            max_dict_bytes,
+        }
+    }
+}
+
 /// Checkout the list of options here:
 /// - https://github.com/facebook/rocksdb/blob/0e0a19832e5f1e3584590edf796abd05c484e649/include/rocksdb/options.h#L432
 /// - https://github.com/facebook/rocksdb/blob/main/include/rocksdb/advanced_options.h
 /// - https://docs.rs/rocksdb/latest/rocksdb/struct.Options.html
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone, Eq, PartialEq)]
 #[pyclass(module = "hugedict.hugedict.rocksdb")]
 pub struct Options {
     pub create_if_missing: Option<bool>,
@@ -139,6 +164,12 @@ pub struct Options {
     pub compression_type: Option<DBCompressionType>,
     pub bottommost_compression_type: Option<DBCompressionType>,
     pub prefix_extractor: Option<PrefixExtractor>,
+    pub compression_opts: Option<CompressionOptions>,
+    pub bottommost_compression_opts: Option<CompressionOptions>,
+    // in here: http://rocksdb.org/blog/2021/05/31/dictionary-compression.html
+    // recommended to 100x of max_dict_bytes
+    pub zstd_max_train_bytes: Option<i32>,
+    pub bottommost_zstd_max_train_bytes: Option<i32>,
 }
 
 #[pymethods]
@@ -162,9 +193,13 @@ impl Options {
         disable_auto_compactions = "None",
         max_background_jobs = "None",
         max_subcompactions = "None",
-        compression_type = "None",
+        compression_type = "self::DBCompressionType::Lz4",
         bottommost_compression_type = "None",
-        prefix_extractor = "None"
+        prefix_extractor = "None",
+        compression_opts = "None",
+        bottommost_compression_opts = "None",
+        zstd_max_train_bytes = "None",
+        bottommost_zstd_max_train_bytes = "None"
     )]
     fn new(
         create_if_missing: Option<bool>,
@@ -186,6 +221,10 @@ impl Options {
         compression_type: Option<DBCompressionType>,
         bottommost_compression_type: Option<DBCompressionType>,
         prefix_extractor: Option<PrefixExtractor>,
+        compression_opts: Option<CompressionOptions>,
+        bottommost_compression_opts: Option<CompressionOptions>,
+        zstd_max_train_bytes: Option<i32>,
+        bottommost_zstd_max_train_bytes: Option<i32>,
     ) -> Self {
         Options {
             create_if_missing: create_if_missing,
@@ -207,6 +246,10 @@ impl Options {
             compression_type: compression_type,
             bottommost_compression_type: bottommost_compression_type,
             prefix_extractor: prefix_extractor,
+            compression_opts: compression_opts,
+            bottommost_compression_opts: bottommost_compression_opts,
+            zstd_max_train_bytes: zstd_max_train_bytes,
+            bottommost_zstd_max_train_bytes: bottommost_zstd_max_train_bytes,
         }
     }
 
@@ -240,6 +283,8 @@ impl Options {
         self.compression_type = o.compression_type;
         self.bottommost_compression_type = o.bottommost_compression_type;
         self.prefix_extractor = o.prefix_extractor;
+        self.compression_opts = o.compression_opts;
+        self.bottommost_compression_opts = o.bottommost_compression_opts;
         Ok(())
     }
 }
@@ -309,6 +354,30 @@ impl Options {
                 }
             }
         }
+        if let Some(compression_opts) = &self.compression_opts {
+            opts.set_compression_options(
+                compression_opts.window_bits,
+                compression_opts.level,
+                compression_opts.strategy,
+                compression_opts.max_dict_bytes,
+            );
+        }
+        if let Some(compression_opts) = &self.bottommost_compression_opts {
+            opts.set_bottommost_compression_options(
+                compression_opts.window_bits,
+                compression_opts.level,
+                compression_opts.strategy,
+                compression_opts.max_dict_bytes,
+                true,
+            );
+        }
+        if let Some(zstd_max_train_bytes) = self.zstd_max_train_bytes {
+            opts.set_zstd_max_train_bytes(zstd_max_train_bytes);
+        }
+        if let Some(bottommost_zstd_max_train_bytes) = self.bottommost_zstd_max_train_bytes {
+            opts.set_bottommost_zstd_max_train_bytes(bottommost_zstd_max_train_bytes, true);
+        }
+
         opts
     }
 }

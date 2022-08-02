@@ -1,25 +1,36 @@
-use crate::error::HugeDictError;
+use super::options::Options;
+use crate::error::{into_pyerr, HugeDictError};
 use crate::funcs::itemgetter::{itemgetter, ItemGetter};
 use anyhow::Result;
 use bzip2::read::MultiBzDecoder;
 use flate2::read::GzDecoder;
 use indicatif::{ParallelProgressIterator, ProgressBar};
 use log::info;
+use pyo3::prelude::*;
+use pyo3::types::{PyBytes, PyTuple};
+use pythonize::depythonize;
 use rayon::prelude::*;
 use rocksdb::{
-    DBWithThreadMode, IngestExternalFileOptions, Options, SingleThreaded, SstFileWriter,
+    DBWithThreadMode, IngestExternalFileOptions, Options as RocksDBOptions, SingleThreaded,
+    SstFileWriter,
 };
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::ffi::OsStr;
 use std::fs;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader, ErrorKind, Read};
 use std::path::Path;
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(tag = "type")]
 pub enum RecordType {
+    // a binary key-value format that:
+    // for each pair of key-value, has the following format
+    // <key length><key><value length><value>
+    #[serde(rename = "bin_kv")]
+    BinaryKeyValue,
+
     // tab separated format of serialized byte key and value
     // serialized key must not contain tab character
     // serialized value must not contain newline character such as \r\n.
@@ -53,8 +64,6 @@ pub struct FileFormat {
     pub is_sorted: bool,
 }
 
-pub struct Fn {}
-
 /// Load files into RocksDB by building SST files and ingesting them
 ///
 /// # Arguments
@@ -65,7 +74,7 @@ pub struct Fn {}
 /// * `compact` - compact the database after loading
 pub fn load<P: AsRef<Path> + Sync>(
     dbpath: &Path,
-    dbopts: &Options,
+    dbopts: &RocksDBOptions,
     files: &[P],
     format: &FileFormat,
     verbose: bool,
@@ -118,7 +127,7 @@ pub fn load<P: AsRef<Path> + Sync>(
 }
 
 pub fn build_sst_file(
-    dbopts: &Options,
+    dbopts: &RocksDBOptions,
     infile: &Path,
     outfile: &Path,
     format: &FileFormat,
@@ -134,6 +143,56 @@ pub fn build_sst_file(
     writer.open(outfile)?;
 
     match (&format.record_type, format.is_sorted) {
+        (RecordType::BinaryKeyValue, false) => {
+            let mut kvs: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
+            let mut num_buf = [0u8; 8];
+            let mut buf: Vec<u8> = Vec::with_capacity(1024);
+
+            loop {
+                let mut size = read_binary_format(&mut reader, &mut num_buf, &mut buf, format)?;
+                if size == -1 {
+                    break;
+                }
+                let k: Vec<u8> = buf[..(size as usize)].into();
+                size = read_binary_format(&mut reader, &mut num_buf, &mut buf, format)?;
+                if size == -1 {
+                    return Err(HugeDictError::FormatError {
+                        format: format.clone(),
+                        content: "file end before finish reading a value".to_owned(),
+                    }
+                    .into());
+                }
+                let v: Vec<u8> = buf[..size as usize].into();
+                kvs.push((k, v));
+            }
+
+            kvs.sort_unstable_by(|kv1, kv2| kv1.0.cmp(&kv2.0));
+            for (k, v) in kvs.iter() {
+                writer.put(k, v)?;
+            }
+        }
+        (RecordType::BinaryKeyValue, true) => {
+            let mut num_buf = [0u8; 8];
+            let mut buf: Vec<u8> = Vec::with_capacity(1024);
+
+            loop {
+                let mut size = read_binary_format(&mut reader, &mut num_buf, &mut buf, format)?;
+                if size == -1 {
+                    break;
+                }
+                let k: Vec<u8> = buf[..(size as usize)].into();
+                size = read_binary_format(&mut reader, &mut num_buf, &mut buf, format)?;
+                if size == -1 {
+                    return Err(HugeDictError::FormatError {
+                        format: format.clone(),
+                        content: "file end before finish reading a value".to_owned(),
+                    }
+                    .into());
+                }
+                let v: Vec<u8> = buf[..size as usize].into();
+                writer.put(k, v)?;
+            }
+        }
         (RecordType::TabSep, false) => {
             let mut kvs: Vec<(String, String)> = Vec::new();
             let mut buffer = String::new();
@@ -341,4 +400,114 @@ fn extract_key<'s>(
         }
     };
     Ok(k)
+}
+
+#[inline]
+fn read_binary_format<'s>(
+    reader: &'s mut BufReader<Box<dyn Read>>,
+    num_buf: &mut [u8; 8],
+    buf: &mut Vec<u8>,
+    format: &FileFormat,
+) -> Result<i64> {
+    let size = match reader.read_exact(num_buf) {
+        Ok(()) => u64::from_le_bytes(num_buf.clone()),
+        Err(error) => {
+            if error.kind() == ErrorKind::UnexpectedEof {
+                return Ok(-1);
+            }
+
+            return Err(HugeDictError::FormatError {
+                format: format.clone(),
+                content: "expect an u64 number of 8 bytes to specify the key/value size".to_owned(),
+            }
+            .into());
+        }
+    };
+
+    buf.clear();
+
+    let nread = reader.take(size).read_to_end(buf)?;
+    if (nread as u64) != size {
+        return Err(HugeDictError::FormatError {
+            format: format.clone(),
+            content: format!(
+                "file end before finish reading a key/value of {} bytes",
+                size
+            ),
+        }
+        .into());
+    }
+
+    Ok(size as i64)
+}
+
+#[pyfunction(name = "load")]
+pub fn py_load(
+    dbpath: &str,
+    dbopts: &Options,
+    files: Vec<&str>,
+    format: &PyAny,
+    verbose: bool,
+    compact: bool,
+) -> PyResult<()> {
+    load(
+        Path::new(dbpath),
+        &dbopts.get_options(),
+        &files.iter().map(|file| Path::new(file)).collect::<Vec<_>>(),
+        &depythonize(format)?,
+        verbose,
+        compact,
+    )?;
+
+    Ok(())
+}
+
+#[pyfunction(name = "build_sst_file")]
+pub fn py_build_sst_file(dbopts: &Options, outfile: &str, input_generator: &PyAny) -> PyResult<()> {
+    let opts = dbopts.get_options();
+    let mut writer = SstFileWriter::create(&opts);
+    writer.open(outfile).map_err(into_pyerr)?;
+
+    loop {
+        let output = input_generator.call0()?;
+        if output.is_none() {
+            break;
+        }
+
+        let kv = output.downcast::<PyTuple>()?;
+        let k = kv.get_item(0)?.downcast::<PyBytes>()?;
+        let v = kv.get_item(1)?.downcast::<PyBytes>()?;
+
+        writer.put(k.as_bytes(), v.as_bytes()).map_err(into_pyerr)?;
+    }
+
+    writer.finish().map_err(into_pyerr)?;
+    Ok(())
+}
+
+#[pyfunction(name = "ingest_sst_files")]
+pub fn py_ingest_sst_files(
+    dbpath: &str,
+    dbopts: &Options,
+    sst_files: Vec<String>,
+    compact: bool,
+) -> PyResult<()> {
+    // ingest the sst files into RocksDB
+    info!("Ingesting SST files...");
+    let opts = dbopts.get_options();
+    let mut ingest_opts = IngestExternalFileOptions::default();
+    ingest_opts.set_move_files(true);
+    let db: DBWithThreadMode<SingleThreaded> =
+        DBWithThreadMode::open(&opts, dbpath).map_err(into_pyerr)?;
+    db.ingest_external_file_opts(&ingest_opts, sst_files)
+        .map_err(into_pyerr)?;
+
+    // compact the database
+    if compact {
+        info!("Compacting database...");
+        db.compact_range::<&[u8], &[u8]>(None, None);
+    }
+
+    drop(db);
+    Ok(())
 }

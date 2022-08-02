@@ -1,6 +1,6 @@
 [project]
 name = "hugedict"
-version = "2.3.3"
+version = "2.4.0"
 authors = [
   { name = "Binh Vu", email = "binh@toan2.com" },
 ]
@@ -29,6 +29,13 @@ test = [
 ]
 dev = [
     "black"
+]
+benchmark = [
+    "typed-argument-parser",
+    "seaborn",
+    "ipykernel",
+    "matplotlib",
+    "ray"
 ]
 
 [project.urls]
