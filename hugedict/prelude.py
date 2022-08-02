@@ -1,7 +1,10 @@
 from hugedict.hugedict.rocksdb import (
     RocksDBDict,
     Options as RocksDBOptions,
+    CompressionOptions as RocksDBCompressionOptions,
     load as rocksdb_load,
+    build_sst_file as rocksdb_build_sst_file,
+    ingest_sst_files as rocksdb_ingest_sst_files,
     fixed_prefix,
     fixed_prefix_alike,
 )
