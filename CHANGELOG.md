@@ -1,8 +1,31 @@
 # Changelog
 
-## [Unreleased](https://github.com/binh-vu/hugedict/tree/HEAD)
+## [2.4.0](https://github.com/binh-vu/hugedict/tree/2.4.0) (2022-08-02)
 
-[Full Changelog](https://github.com/binh-vu/hugedict/compare/2.3.2...HEAD)
+[Full Changelog](https://github.com/binh-vu/hugedict/compare/2.3.3...2.4.0)
+
+**Implemented enhancements:**
+
+- improve rocksdb loader [\#14](https://github.com/binh-vu/hugedict/issues/14) ([\#16](https://github.com/binh-vu/hugedict/pull/16) ([binh-vu](https://github.com/binh-vu)))
+- Ability to manually update the cache [\#11](https://github.com/binh-vu/hugedict/issues/11)
+
+**Fixed**
+
+- \[mrsw\] Invalid address when the URL is too long [\#8](https://github.com/binh-vu/hugedict/issues/8)
+
+## [2.3.3](https://github.com/binh-vu/hugedict/tree/2.3.3) (2022-07-31)
+
+[Full Changelog](https://github.com/binh-vu/hugedict/compare/2.3.2...2.3.3)
+
+**Implemented enhancements:**
+
+- Improve documentation [\#12](https://github.com/binh-vu/hugedict/pull/12) ([binh-vu](https://github.com/binh-vu))
+
+**Fixed**
+
+- `hugedict.parallel` cache function in big script requires more time to start a primary instance [\#10](https://github.com/binh-vu/hugedict/issues/10) ([\#13](https://github.com/binh-vu/hugedict/pull/13) ([binh-vu](https://github.com/binh-vu)))
+- \[mrsw\] entry not found [\#9](https://github.com/binh-vu/hugedict/issues/9)
+- PyLance reports private import usage for `hugedict.prelude` [\#7](https://github.com/binh-vu/hugedict/issues/7)
 
 ## [2.3.2](https://github.com/binh-vu/hugedict/releases/tag/2.3.2) - 2022-07-05
 
