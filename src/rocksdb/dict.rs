@@ -378,6 +378,10 @@ macro_rules! convert_key {
 pub(crate) use convert_key;
 
 /// Deserialize a value from bytes without copying it twice.
+///
+/// It creates a memoryview object pointing to `val`'s memory. Then invoke a deserializer that directly
+/// use the memoryview object to restore Python object. If the deserializer is implemented correctly, it
+/// won't store the memoryview object, so the memoryview object is gone and we don't have unsafe memory access.
 #[inline]
 pub fn pydeser_value<V: AsRef<[u8]>>(val: V, deser: &Py<PyAny>, py: Python) -> PyResult<Py<PyAny>> {
     let v = unsafe {
