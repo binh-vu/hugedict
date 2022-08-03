@@ -99,7 +99,7 @@ class FileFormat(TypedDict):
 def load(
     dbpath: str,
     dbopts: Options,
-    infiles: List[str],
+    files: List[str],
     format: FileFormat,
     verbose: bool,
     compact: bool,
@@ -109,7 +109,7 @@ def load(
     Args:
         dbpath: path to rocksdb database
         dbopts: rocksdb options
-        infiles: list of input files
+        files: list of input files
         format: file format
         verbose: whether to print progress
         compact: whether to compact the database after loading
@@ -169,6 +169,9 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
     @property
     def ser_value(self) -> Callable[[V], bytes]:
         """Serialize value to bytes."""
+    @property
+    def options(self) -> Options:
+        """Get db's options"""
     def _put(self, k: bytes, v: bytes):
         """Put the raw (bytes) key and value into the database."""
     def get_int_property(
