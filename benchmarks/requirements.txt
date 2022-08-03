@@ -1,0 +1,5 @@
+typed-argument-parser
+seaborn
+ipykernel
+matplotlib
+ray

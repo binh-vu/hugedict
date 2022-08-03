@@ -1,6 +1,6 @@
 [project]
 name = "hugedict"
-version = "2.4.0"
+version = "2.4.1"
 authors = [
   { name = "Binh Vu", email = "binh@toan2.com" },
 ]
@@ -23,19 +23,10 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-test = [
+dev = [
     'pytest >= 6.2.5, < 7.0.0',
     'pytest-cov >= 3.0.0, < 4.0.0',
-]
-dev = [
-    "black"
-]
-benchmark = [
-    "typed-argument-parser",
-    "seaborn",
-    "ipykernel",
-    "matplotlib",
-    "ray"
+    'black >= 22.3.0, < 23.0.0',
 ]
 
 [project.urls]

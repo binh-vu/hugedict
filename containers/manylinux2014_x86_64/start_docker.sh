@@ -1,0 +1,1 @@
+docker run --rm -v $(pwd):/project -w /project -u $(id -u ${USER}):$(id -g ${USER}) -e EXTRA_PATH=/opt/python/cp39-cp39/bin:/home/builder/.local/bin -it hugedict
