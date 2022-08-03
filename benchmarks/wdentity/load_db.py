@@ -130,6 +130,48 @@ db_options = {
             zstd_max_train_bytes=100 * 16 * 1024,
         ),
     },
+    "compress-10": {
+        "name": "--compress-type=zstd-3-w-14-rem",
+        "opts": RocksDBOptions(
+            create_if_missing=True,
+            compression_type="zstd",
+            compression_opts=RocksDBCompressionOptions(
+                window_bits=-14,
+                level=3,
+                strategy=0,
+                max_dict_bytes=16 * 1024,
+            ),
+            zstd_max_train_bytes=100 * 16 * 1024,
+        ),
+    },
+    "compress-11": {
+        "name": "--compress-type=zstd-3-w-14-d10-rem",
+        "opts": RocksDBOptions(
+            create_if_missing=True,
+            compression_type="zstd",
+            compression_opts=RocksDBCompressionOptions(
+                window_bits=-14,
+                level=3,
+                strategy=0,
+                max_dict_bytes=16 * 1024,
+            ),
+            zstd_max_train_bytes=10 * 16 * 1024,
+        ),
+    },
+    "compress-12": {
+        "name": "--compress-type=zstd-6-w-14",
+        "opts": RocksDBOptions(
+            create_if_missing=True,
+            compression_type="zstd",
+            compression_opts=RocksDBCompressionOptions(
+                window_bits=-14,
+                level=6,
+                strategy=0,
+                max_dict_bytes=16 * 1024,
+            ),
+            zstd_max_train_bytes=100 * 16 * 1024,
+        ),
+    },
 }
 
 

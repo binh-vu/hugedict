@@ -7,5 +7,8 @@
 # python benchmarks/wdentity/load_db.py --name default --option compress-6
 # python benchmarks/wdentity/load_db.py --name default --option compress-7
 # python benchmarks/wdentity/load_db.py --name default --option compress-8
-python benchmarks/wdentity/load_db.py --name default --option compress-9
-python benchmarks/wdentity/load_db.py --name zstd-6 --option default
+# python benchmarks/wdentity/load_db.py --name default --option compress-9
+# python benchmarks/wdentity/load_db.py --name default --option compress-10
+# python benchmarks/wdentity/load_db.py --name default --option compress-11
+python benchmarks/wdentity/load_db.py --name default --option compress-12
+# python benchmarks/wdentity/load_db.py --name zstd-6 --option default
