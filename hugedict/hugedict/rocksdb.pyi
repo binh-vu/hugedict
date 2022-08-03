@@ -83,6 +83,9 @@ class RecordType(TypedDict):
         each line is a json object, key is required but value is optional
     tuple2:
         each line is a json list of two items key and value, key and value are optional
+    bin_kv:
+        binary data of key-value pairs concatenated in the following format <key_size><key><value_size><value>
+        where <key_size> and <value_size> are 8-byte unsigned integers encoded in little-endian
     """
 
     type: Literal["tabsep", "ndjson", "tuple2", "bin_kv"]

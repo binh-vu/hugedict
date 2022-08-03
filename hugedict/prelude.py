@@ -8,6 +8,7 @@ from hugedict.hugedict.rocksdb import (
     fixed_prefix,
     fixed_prefix_alike,
 )
+from hugedict.hugedict import init_env_logger
 from hugedict.parallel import (
     Parallel,
     Compressing as ParallelCacheCompressingMode,
