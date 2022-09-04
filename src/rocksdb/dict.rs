@@ -147,8 +147,10 @@ impl RocksDBDict {
         Ok(Py::new(py, it)?)
     }
 
-    fn get(&self, py: Python, key: &PyAny, default: &PyAny) -> PyResult<Py<PyAny>> {
-        convert_key!(self.impl_get_default(py ; key ; default))
+    #[args(default = "None")]
+    fn get(&self, py: Python, key: &PyAny, default: Option<Py<PyAny>>) -> PyResult<Py<PyAny>> {
+        let dft = default.unwrap_or(py.None());
+        convert_key!(self.impl_get_default(py ; key ; dft))
     }
 
     fn pop(&self, py: Python, key: &PyAny, default: &PyAny) -> PyResult<Py<PyAny>> {
@@ -308,10 +310,10 @@ impl RocksDBDict {
         &self,
         py: Python,
         key: K,
-        default: &PyAny,
+        default: Py<PyAny>,
     ) -> PyResult<Py<PyAny>> {
         match self.db.get_pinned(key.as_ref()).map_err(into_pyerr)? {
-            None => Ok(default.into()),
+            None => Ok(default),
             Some(value) => Ok(pydeser_value(value, &self.deser_value, py)?),
         }
     }
