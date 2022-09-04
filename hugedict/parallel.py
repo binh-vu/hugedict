@@ -454,7 +454,7 @@ class LazyDBCacheFn:
 
 class CacheFnKey:
     @staticmethod
-    def default_key(fn_name, args, kwargs):
+    def default_key(fn_name, args: tuple, kwargs: dict):
         return orjson.dumps((fn_name, args, kwargs))
 
     @staticmethod

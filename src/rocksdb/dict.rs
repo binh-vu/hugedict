@@ -179,6 +179,13 @@ impl RocksDBDict {
             .map_err(into_pyerr)
     }
 
+    fn _get(&self, py: Python, key: &PyBytes) -> PyResult<Py<PyBytes>> {
+        match self.db.get_pinned(key.as_bytes()).map_err(into_pyerr)? {
+            None => Err(PyKeyError::new_err(PyObject::from(key))),
+            Some(value) => Ok(PyBytes::new(py, value.as_ref()).into()),
+        }
+    }
+
     /// Retrieves a RocksDB property's value and cast it to an integer.
     ///
     /// Full list of properties that return int values could be find [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L428-L634).

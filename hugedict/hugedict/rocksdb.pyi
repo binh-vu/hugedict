@@ -177,6 +177,8 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         """Get db's options"""
     def _put(self, k: bytes, v: bytes):
         """Put the raw (bytes) key and value into the database."""
+    def _get(self, k: bytes) -> bytes:
+        """Get raw (bytes) value from the database. Raise KeyError if not found."""
     def get_int_property(
         self,
         name: Literal[

@@ -1,6 +1,6 @@
 [project]
 name = "hugedict"
-version = "2.4.2"
+version = "2.5.0"
 authors = [
   { name = "Binh Vu", email = "binh@toan2.com" },
 ]
