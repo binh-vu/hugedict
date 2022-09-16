@@ -21,7 +21,11 @@ from hugedict.cachedict import CacheDict
 __all__ = [
     "RocksDBDict",
     "RocksDBOptions",
+    "RocksDBCompressionOptions",
     "rocksdb_load",
+    "rocksdb_build_sst_file",
+    "rocksdb_ingest_sst_files",
+    "init_env_logger",
     "fixed_prefix",
     "fixed_prefix_alike",
     "Parallel",

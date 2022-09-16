@@ -109,6 +109,8 @@ def load(
 ) -> None:
     """Load files into rocksdb database by building SST files and ingesting them.
 
+    Raised exception when no sst files are created (i.e., no input files).
+
     Args:
         dbpath: path to rocksdb database
         dbopts: rocksdb options
@@ -122,13 +124,16 @@ def build_sst_file(
     dbopts: Options,
     outfile: str,
     input_generator: Callable[[], Optional[Tuple[bytes, bytes]]],
-) -> None:
+) -> bool:
     """Build SST file from the input generator
 
     Args:
         dbopts: rocksdb options
         outfile: output file
         input_generator: when the function is called, it should return a new key-value pair. when it returns None, the input is exhausted.
+
+    Returns:
+        True if the output file is created, False otherwise.
     """
 
 def ingest_sst_files(dbpath: str, dbopts: Options, sst_files: List[str], compact: bool):

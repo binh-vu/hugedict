@@ -64,7 +64,9 @@ pub struct FileFormat {
     pub is_sorted: bool,
 }
 
-/// Load files into RocksDB by building SST files and ingesting them
+/// Load files into RocksDB by building SST files and ingesting them.
+///
+/// Raised exception when no sst files are created (i.e., no input files).
 ///
 /// # Arguments
 /// * `dbpath` - path to a RocksDB
@@ -90,13 +92,24 @@ pub fn load<P: AsRef<Path> + Sync>(
     info!("Creating SST files...");
 
     // create sst files storing in temporary directory
-    let it = files.par_iter().enumerate().map(|(index, file)| {
-        let sstfile = tempdir.join(format!("{}.sst", index));
-        build_sst_file(dbopts, file.as_ref(), &sstfile, &format)?;
-        Ok(sstfile)
-    });
+    let it = files
+        .par_iter()
+        .enumerate()
+        .map(|(index, file)| {
+            let sstfile = tempdir.join(format!("{}.sst", index));
+            if build_sst_file(dbopts, file.as_ref(), &sstfile, &format)? {
+                Ok(Some(sstfile))
+            } else {
+                Ok(None)
+            }
+        })
+        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_some())
+        .map(|r| match r {
+            Ok(path) => Ok(path.unwrap()),
+            Err(e) => Err(e),
+        });
 
-    let sst_files: Result<Vec<PathBuf>> = if verbose {
+    let sst_files_: Result<Vec<PathBuf>> = if verbose {
         let pb = ProgressBar::new(files.len() as u64);
         pb.set_message("Building SST Files");
 
@@ -104,13 +117,18 @@ pub fn load<P: AsRef<Path> + Sync>(
     } else {
         it.collect()
     };
+    let sst_files = sst_files_?;
+
+    if sst_files.len() == 0 {
+        return Err(HugeDictError::NoFiles.into());
+    }
 
     // ingest the sst files into RocksDB
     info!("Ingesting SST files...");
     let mut ingest_opts = IngestExternalFileOptions::default();
     ingest_opts.set_move_files(true);
     let db: DBWithThreadMode<SingleThreaded> = DBWithThreadMode::open(dbopts, dbpath)?;
-    db.ingest_external_file_opts(&ingest_opts, sst_files?)?;
+    db.ingest_external_file_opts(&ingest_opts, sst_files)?;
 
     // compact the database
     if compact {
@@ -131,13 +149,14 @@ pub fn build_sst_file(
     infile: &Path,
     outfile: &Path,
     format: &FileFormat,
-) -> Result<()> {
+) -> Result<bool> {
     let stream: Box<dyn Read> = match infile.extension().and_then(OsStr::to_str) {
         Some("gz") => Box::new(GzDecoder::new(fs::File::open(infile)?)),
         Some("bz2") => Box::new(MultiBzDecoder::new(fs::File::open(infile)?)),
         _ => Box::new(fs::File::open(infile)?),
     };
     let mut reader = BufReader::new(stream);
+    let mut has_record = false;
 
     let mut writer = SstFileWriter::create(dbopts);
     writer.open(outfile)?;
@@ -167,6 +186,7 @@ pub fn build_sst_file(
             }
 
             kvs.sort_unstable_by(|kv1, kv2| kv1.0.cmp(&kv2.0));
+            has_record = kvs.len() > 0;
             for (k, v) in kvs.iter() {
                 writer.put(k, v)?;
             }
@@ -191,6 +211,7 @@ pub fn build_sst_file(
                 }
                 let v: Vec<u8> = buf[..size as usize].into();
                 writer.put(k, v)?;
+                has_record = true;
             }
         }
         (RecordType::TabSep, false) => {
@@ -212,6 +233,7 @@ pub fn build_sst_file(
             }
 
             kvs.sort_unstable_by(|kv1, kv2| kv1.0.cmp(&kv2.0));
+            has_record = kvs.len() > 0;
             for (k, v) in kvs.iter() {
                 writer.put(k, v)?;
             }
@@ -230,6 +252,7 @@ pub fn build_sst_file(
                 }
                 writer.put(kv[0], kv[1])?;
                 buffer.clear();
+                has_record = true;
             }
         }
         (RecordType::NDJson { key, value }, false) => {
@@ -265,6 +288,7 @@ pub fn build_sst_file(
             }
 
             kvs.sort_unstable_by(|kv1, kv2| kv1.0.cmp(&kv2.0));
+            has_record = kvs.len() > 0;
             for (k, v) in kvs.iter() {
                 writer.put(k, v)?;
             }
@@ -301,6 +325,7 @@ pub fn build_sst_file(
                 };
 
                 buffer.clear();
+                has_record = true;
             }
         }
         (RecordType::Tuple2 { key, value }, false) => {
@@ -328,6 +353,7 @@ pub fn build_sst_file(
             }
 
             kvs.sort_unstable_by(|kv1, kv2| kv1.0.cmp(&kv2.0));
+            has_record = kvs.len() > 0;
             for (k, v) in kvs.iter() {
                 writer.put(k, v)?;
             }
@@ -353,13 +379,17 @@ pub fn build_sst_file(
 
                 writer.put(k, v)?;
                 buffer.clear();
+                has_record = true;
             }
         }
     }
 
-    writer.finish()?;
-
-    Ok(())
+    if has_record {
+        writer.finish()?;
+    } else {
+        fs::remove_file(outfile)?;
+    }
+    Ok(has_record)
 }
 
 #[inline]
@@ -463,9 +493,14 @@ pub fn py_load(
 }
 
 #[pyfunction(name = "build_sst_file")]
-pub fn py_build_sst_file(dbopts: &Options, outfile: &str, input_generator: &PyAny) -> PyResult<()> {
+pub fn py_build_sst_file(
+    dbopts: &Options,
+    outfile: &str,
+    input_generator: &PyAny,
+) -> PyResult<bool> {
     let opts = dbopts.get_options();
     let mut writer = SstFileWriter::create(&opts);
+    let mut has_record = false;
     writer.open(outfile).map_err(into_pyerr)?;
 
     loop {
@@ -479,10 +514,15 @@ pub fn py_build_sst_file(dbopts: &Options, outfile: &str, input_generator: &PyAn
         let v = kv.get_item(1)?.downcast::<PyBytes>()?;
 
         writer.put(k.as_bytes(), v.as_bytes()).map_err(into_pyerr)?;
+        has_record = true;
     }
 
-    writer.finish().map_err(into_pyerr)?;
-    Ok(())
+    if has_record {
+        writer.finish().map_err(into_pyerr)?;
+    } else {
+        fs::remove_file(outfile)?;
+    }
+    Ok(has_record)
 }
 
 #[pyfunction(name = "ingest_sst_files")]
