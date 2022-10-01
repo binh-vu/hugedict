@@ -2,10 +2,11 @@ from os import read
 import time
 from loguru import logger
 import ray
-from typing import Callable, List, TypeVar, Any, Union
+from typing import Callable, List, Optional, TypeVar, Any, Union
 from tqdm import tqdm
 
 R = TypeVar("R")
+OBJECTS = {}
 
 
 def ray_map(
@@ -33,3 +34,26 @@ def ray_map(
 
             if len(notready_refs) == 0:
                 return output
+
+
+def get_instance(constructor: Callable[[], R], name: Optional[str] = None) -> R:
+    """A utility function to get a singleton, which can be created from the given constructor.
+
+    One use case of this function is we have a big object that is expensive to send
+    to individual task repeatedly. As ray executes multiple tasks in a reusable worker,
+    this allows us to create the object per worker instead of per task.
+
+    Reference: https://docs.ray.io/en/latest/ray-core/actors.html#faq-actors-workers-and-resources
+    """
+    global OBJECTS
+
+    if name is None:
+        assert (
+            constructor.__name__ != "<lambda>"
+        ), "Cannot use lambda as a name because it will keep changing"
+        name = constructor  # type: ignore
+
+    if name not in OBJECTS:
+        logger.trace("Create a new instance of {}", name)
+        OBJECTS[name] = constructor()
+    return OBJECTS[name]
