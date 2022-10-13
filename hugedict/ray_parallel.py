@@ -1,6 +1,4 @@
 import math
-from os import read
-import time
 from loguru import logger
 import ray
 from typing import Callable, List, Optional, TypeVar, Any, Union
@@ -16,10 +14,11 @@ def ray_map(
     verbose: bool = False,
     poll_interval: float = 0.1,
     concurrent_submissions: int = 3000,
+    desc: Optional[str] = None,
 ) -> List[R]:
     n_jobs = len(args_lst)
 
-    with tqdm(total=n_jobs, disable=not verbose) as pbar:
+    with tqdm(total=n_jobs, desc=desc, disable=not verbose) as pbar:
         output: List[R] = [None] * n_jobs  # type: ignore
 
         notready_refs = []
