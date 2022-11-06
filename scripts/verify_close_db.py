@@ -1,8 +1,8 @@
 import shutil
-from hugedict.v1.rocksdb import RocksDBDict
-from hugedict.v1.mrsw_rocksdb import *
+from hugedict_v1.rocksdb import RocksDBDict
+from hugedict_v1.mrsw_rocksdb import *
 from multiprocessing.pool import *
-from hugedict.v1.parallel import MyManager
+from hugedict_v1.parallel import MyManager
 
 shutil.rmtree("/tmp/hugedict/test.db", ignore_errors=True)
 

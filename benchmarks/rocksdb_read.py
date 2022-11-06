@@ -12,11 +12,11 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-from hugedict.v1.loader import FileFormat, load
+from hugedict_v1.loader import FileFormat, load
 from rocksdb import DB, Options  # type: ignore
 from sm.prelude import M
 
-from hugedict.v1.rocksdb import RocksDBDict
+from hugedict_v1.rocksdb import RocksDBDict
 from hugedict.hugedict.rocksdb import RocksDBDict as RustRocksDBDict, Options
 
 bench_dir = Path(__file__).parent

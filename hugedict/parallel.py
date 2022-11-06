@@ -5,19 +5,14 @@ from functools import partial
 import gc
 import gzip
 from inspect import signature
-from multiprocessing import Pool, Process, get_context
-from multiprocessing.context import SpawnProcess
+from multiprocessing import get_context
 from multiprocessing.pool import ThreadPool
 from operator import itemgetter
-import os
 import subprocess
 from pathlib import Path
 import pickle
-import random
 import shutil
 import sys
-import signal
-import time
 from typing import Any, Callable, List, Literal, Optional, Union, MutableMapping, cast
 from uuid import uuid4
 import base64
@@ -30,15 +25,12 @@ from hugedict.misc import (
     Chain2,
     compress_zstd6_pyobject,
     decompress_zstd_pyobject,
-    identity,
     compress_pyobject,
-    decompress_pyobject,
 )
 from hugedict.hugedict.rocksdb import (
     Options,
     RocksDBDict,
     SecondaryDB,
-    primary_db,
     stop_primary_db,
 )
 

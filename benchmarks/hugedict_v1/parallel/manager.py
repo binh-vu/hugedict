@@ -5,7 +5,7 @@ from multiprocessing.managers import BaseManager, SharedMemoryManager
 from multiprocessing.shared_memory import SharedMemory
 from pathlib import Path
 from typing import Callable, Optional, Union
-from hugedict.v1.mrsw_rocksdb import (
+from hugedict_v1.mrsw_rocksdb import (
     BloomFilterArgs,
     IProxyDict,
     PrimarySyncedRocksDBDict,

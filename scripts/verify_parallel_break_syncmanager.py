@@ -1,7 +1,7 @@
 import shutil
 from hugedict.parallel import Parallel
-from hugedict.v1.parallel.manager import MB
-from hugedict.v1.parallel.parallel import Compressing
+from hugedict_v1.parallel.manager import MB
+from hugedict_v1.parallel.parallel import Compressing
 from loguru import logger
 import orjson
 import sm.misc as M

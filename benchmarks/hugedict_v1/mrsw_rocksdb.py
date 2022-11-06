@@ -12,7 +12,7 @@ from typing import (
     Union,
     MutableMapping,
 )
-from hugedict.v1.rocksdb import RocksDBDict
+from hugedict_v1.rocksdb import RocksDBDict
 from hugedict.types import K, V, InvalidUsageError
 from pybloomfilter import BloomFilter
 

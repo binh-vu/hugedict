@@ -8,7 +8,7 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
-from hugedict.v1.loader import FileFormat, load
+from hugedict_v1.loader import FileFormat, load
 from rocksdb import DB, Options  # type: ignore
 from sm.prelude import M
 

@@ -1,7 +1,7 @@
 from pathlib import Path
 import time, tempfile, pytest
 
-from hugedict.v1.parallel import Parallel
+from hugedict_v1.parallel import Parallel
 
 
 def heavy_computing(seconds: float):
