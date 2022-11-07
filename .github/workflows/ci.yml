@@ -37,7 +37,7 @@ jobs:
           pip install pytest
           # temporary moving the src to another folder to run the test
           mv hugedict hugedict2
-          pytest
+          pytest -xs tests/
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -69,7 +69,7 @@ jobs:
       #     pip install pytest
       #     # temporary moving the src to another folder to run the test
       #     mv hugedict hugedict2
-      #     pytest
+      #     pytest -xs tests/
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
@@ -100,7 +100,7 @@ jobs:
           pip install pytest
           # temporary moving the src to another folder to run the test
           mv hugedict hugedict2
-          pytest
+          pytest -xs tests/
       - name: Upload wheels
         uses: actions/upload-artifact@v2
         with:
