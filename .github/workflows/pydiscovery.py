@@ -2,8 +2,6 @@ from __future__ import print_function
 import os, subprocess, re
 from typing import Tuple
 
-from pyparsing import Literal
-
 
 def is_python_home(dir: str):
     return any(
