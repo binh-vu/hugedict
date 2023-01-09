@@ -329,7 +329,7 @@ pub fn build_sst_file(
             }
         }
         (RecordType::Tuple2 { key, value }, false) => {
-            let mut kvs: Vec<(Vec<u8>, String)> = Vec::new();
+            let mut kvs: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
             let mut buffer = String::new();
 
             let keygetter = itemgetter(key.as_ref());
@@ -343,9 +343,28 @@ pub fn build_sst_file(
                     .as_ref()
                     .as_ref()
                     .into();
-                let v: String = match valuegetter.get_item(&kv.1) {
+                let v: Vec<u8> = match valuegetter.get_item(&kv.1) {
                     None => return Err(HugeDictError::ValueError(valueerror_msg.clone()).into()),
-                    Some(o) => serde_json::to_string(o).expect("No bug in serde_json package"),
+                    Some(o) => match o {
+                        serde_json::Value::String(s) => s.as_bytes().to_vec(),
+                        serde_json::Value::Bool(s) => vec![*s as u8],
+                        // always use little endian so that the databases can move between platform without
+                        // rebuilt
+                        serde_json::Value::Number(s) if s.is_f64() => {
+                            s.as_f64().unwrap().to_le_bytes().to_vec()
+                        }
+                        serde_json::Value::Number(s) if s.is_i64() => {
+                            s.as_f64().unwrap().to_le_bytes().to_vec()
+                        }
+                        serde_json::Value::Number(s) if s.is_u64() => {
+                            s.as_u64().unwrap().to_le_bytes().to_vec()
+                        }
+                        serde_json::Value::Null => vec![],
+                        _ => serde_json::to_string(o)
+                            .expect("No bug in serde_json package")
+                            .as_bytes()
+                            .to_vec(),
+                    },
                 };
 
                 kvs.push((k, v));
@@ -372,9 +391,28 @@ pub fn build_sst_file(
                     .as_ref()
                     .as_ref()
                     .into();
-                let v: String = match valuegetter.get_item(&kv.1) {
+                let v: Vec<u8> = match valuegetter.get_item(&kv.1) {
                     None => return Err(HugeDictError::ValueError(valueerror_msg.clone()).into()),
-                    Some(o) => serde_json::to_string(o).expect("No bug in serde_json package"),
+                    Some(o) => match o {
+                        serde_json::Value::String(s) => s.as_bytes().to_vec(),
+                        serde_json::Value::Bool(s) => vec![*s as u8],
+                        // always use little endian so that the databases can move between platform without
+                        // rebuilt
+                        serde_json::Value::Number(s) if s.is_f64() => {
+                            s.as_f64().unwrap().to_le_bytes().to_vec()
+                        }
+                        serde_json::Value::Number(s) if s.is_i64() => {
+                            s.as_f64().unwrap().to_le_bytes().to_vec()
+                        }
+                        serde_json::Value::Number(s) if s.is_u64() => {
+                            s.as_u64().unwrap().to_le_bytes().to_vec()
+                        }
+                        serde_json::Value::Null => vec![],
+                        _ => serde_json::to_string(o)
+                            .expect("No bug in serde_json package")
+                            .as_bytes()
+                            .to_vec(),
+                    },
                 };
 
                 writer.put(k, v)?;

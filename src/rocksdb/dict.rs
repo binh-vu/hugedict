@@ -188,6 +188,38 @@ impl RocksDBDict {
         }
     }
 
+    fn _multi_get(&self, py: Python, keys: Vec<&PyBytes>) -> PyResult<Vec<Option<Py<PyBytes>>>> {
+        let mut values = Vec::with_capacity(keys.len());
+        let it = keys.into_iter().map(|k| k.as_bytes());
+
+        for item in self.db.multi_get(it) {
+            let value = match item.map_err(into_pyerr)? {
+                None => None,
+                Some(value) => Some(PyBytes::new(py, value.as_ref()).into()),
+            };
+            values.push(value);
+        }
+        Ok(values)
+    }
+
+    // fn _multi_get_str(
+    //     &self,
+    //     py: Python,
+    //     keys: Vec<&PyBytes>,
+    // ) -> PyResult<Vec<Option<Py<PyString>>>> {
+    //     let mut values = Vec::with_capacity(keys.len());
+    //     let it = keys.into_iter().map(|k| k.as_bytes());
+
+    //     for item in self.db.multi_get(it) {
+    //         let value = match item.map_err(into_pyerr)? {
+    //             None => None,
+    //             Some(value) => Some(PyString::new(py, std::str::from_utf8(&value)?)),
+    //         };
+    //         values.push(value);
+    //     }
+    //     Ok(values)
+    // }
+
     /// Retrieves a RocksDB property's value and cast it to an integer.
     ///
     /// Full list of properties that return int values could be find [here](https://github.com/facebook/rocksdb/blob/08809f5e6cd9cc4bc3958dd4d59457ae78c76660/include/rocksdb/db.h#L428-L634).

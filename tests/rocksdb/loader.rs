@@ -92,3 +92,50 @@ fn load_empty_file_ok() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+fn load_tuple2_correct_type() -> Result<()> {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/resources/tuple2");
+    let mut files = vec![];
+
+    for file in fs::read_dir(&dir)? {
+        let path = file?.path();
+        if path.extension().and_then(OsStr::to_str).unwrap_or("") != "jl" {
+            continue;
+        }
+        files.push(path);
+    }
+
+    let dir = tempdir()?;
+    let dbpath = dir.path();
+
+    let mut opts = Options::default();
+    opts.create_if_missing(true);
+
+    load(
+        dbpath,
+        &opts,
+        files.as_slice(),
+        &FileFormat {
+            record_type: RecordType::Tuple2 {
+                key: None,
+                value: None,
+            },
+            is_sorted: false,
+        },
+        true,
+        true,
+    )?;
+
+    let db = DB::open(&opts, dbpath)?;
+    assert_eq!(
+        vec![111, 0, 100, 185, 55, 75, 28, 62],
+        db.get("Q30355237")?
+            .unwrap_or(vec![0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x40])
+    );
+    assert_eq!(
+        "Berentsen",
+        String::from_utf8(db.get("Q30358242")?.unwrap_or(vec![]))?
+    );
+    Ok(())
+}
