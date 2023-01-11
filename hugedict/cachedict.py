@@ -16,7 +16,7 @@ from copy import copy
 
 
 class CacheDict(HugeMutableMapping[K, V]):
-    def __init__(self, mapping: HugeMutableMapping[K, V]) -> None:
+    def __init__(self, mapping: MutableMapping[K, V]) -> None:
         self.mapping = mapping
         self._cache: Dict[K, V] = {}
 
