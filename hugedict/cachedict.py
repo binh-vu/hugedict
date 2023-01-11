@@ -11,11 +11,11 @@ from typing import (
     Union,
     ValuesView,
 )
-from hugedict.types import K, V, HugeMutableMapping
+from hugedict.types import K, V, CacheHugeMutableMapping
 from copy import copy
 
 
-class CacheDict(HugeMutableMapping[K, V]):
+class CacheDict(CacheHugeMutableMapping[K, V]):
     def __init__(self, mapping: MutableMapping[K, V]) -> None:
         self.mapping = mapping
         self._cache: Dict[K, V] = {}

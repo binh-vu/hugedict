@@ -27,31 +27,35 @@ class InvalidUsageError(Exception):
 
 class HugeMapping(Mapping[K, V]):
     @abstractmethod
-    def cache(self) -> HugeMapping[K, V]:
+    def cache(self) -> CacheHugeMapping[K, V]:
         """Return a new mapping that will cache the results to
         avoid calling to an external mapping
         """
-        pass
-
-    @abstractmethod
-    def update_cache(
-        self, o: Union[Mapping[K, V], Sequence[Tuple[K, V]]]
-    ) -> HugeMapping[K, V]:
-        """Update the cache with the given mapping or iterator"""
         pass
 
 
 class HugeMutableMapping(MutableMapping[K, V]):
     @abstractmethod
-    def cache(self) -> HugeMutableMapping[K, V]:
+    def cache(self) -> CacheHugeMutableMapping[K, V]:
         """Return a new mapping that will cache the results to
         avoid calling to an external mapping
         """
         pass
 
+
+class CacheHugeMapping(HugeMapping[K, V]):
     @abstractmethod
     def update_cache(
         self, o: Union[Mapping[K, V], Sequence[Tuple[K, V]]]
-    ) -> HugeMapping[K, V]:
+    ) -> CacheHugeMapping[K, V]:
+        """Update the cache with the given mapping or iterator"""
+        pass
+
+
+class CacheHugeMutableMapping(HugeMutableMapping[K, V]):
+    @abstractmethod
+    def update_cache(
+        self, o: Union[Mapping[K, V], Sequence[Tuple[K, V]]]
+    ) -> CacheHugeMutableMapping[K, V]:
         """Update the cache with the given mapping or iterator"""
         pass
