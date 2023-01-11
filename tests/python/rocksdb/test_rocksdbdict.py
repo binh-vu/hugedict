@@ -87,21 +87,6 @@ class TestRocksDBDict(TestMutableMappingSuite):
             assert k not in mapping
             assert k in mcache
 
-    def test_update_cache2(
-        self,
-        mapping: RocksDBDict,
-        existed_items: List[tuple],
-        new_items: List[Tuple[str, str]],
-    ):
-        mcache = mapping.update_cache(new_items)
-        for k, v in existed_items:
-            assert k in mapping
-            assert k in mcache
-
-        for k, v in new_items:
-            assert k not in mapping
-            assert k in mcache
-
     def test_has_properties(self, mapping: RocksDBDict):
         assert hasattr(mapping, "deser_value")
         assert hasattr(mapping, "ser_value")
