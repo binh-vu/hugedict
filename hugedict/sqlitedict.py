@@ -20,6 +20,7 @@ SqliteKey = TypeVar("SqliteKey", bound=Union[str, int])
 class SqliteDictKeyType(str, Enum):
     str = "TEXT"
     int = "INTEGER"
+    bytes = "BLOB"
 
 
 class SqliteDict(HugeMutableMapping[SqliteKey, V]):
@@ -28,8 +29,8 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
 
     Args:
         path: path to the sqlite database
-        deser_key: deserialize key from a memoryview
-        deser_value: deserialize value from a memoryview
+        deser_key: deserialize key from bytes
+        deser_value: deserialize value from bytes
         ser_value: serialize value to bytes
     """
 
