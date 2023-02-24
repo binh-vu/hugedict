@@ -14,10 +14,10 @@ from hugedict.cachedict import CacheDict
 from hugedict.types import HugeMutableMapping, V
 
 
-SqliteKey = TypeVar("SqliteKey", bound=Union[str, int])
+SqliteKey = TypeVar("SqliteKey", bound=Union[str, int, bytes])
 
 
-class SqliteDictKeyType(str, Enum):
+class SqliteDictFieldType(str, Enum):
     str = "TEXT"
     int = "INTEGER"
     bytes = "BLOB"
@@ -37,9 +37,10 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
     def __init__(
         self,
         path: Union[str, Path],
-        keytype: SqliteDictKeyType,
-        ser_value: Callable[[V], bytes],
-        deser_value: Callable[[bytes], V],
+        keytype: SqliteDictFieldType,
+        ser_value: Callable[[V], bytes] | Callable[[V], V],
+        deser_value: Callable[[bytes], V] | Callable[[V], V],
+        valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes,
     ):
         self.dbfile = Path(path)
         need_init = not self.dbfile.exists()
@@ -47,7 +48,7 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         if need_init:
             with self.db:
                 self.db.execute(
-                    f"CREATE TABLE data(key {keytype.value} PRIMARY KEY, value BLOB)"
+                    f"CREATE TABLE data(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
                 )
 
         self.ser_value = ser_value
@@ -59,7 +60,7 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         ser_value: Callable[[V], bytes],
         deser_value: Callable[[bytes], V],
     ) -> SqliteDict[str, V]:
-        return SqliteDict(path, SqliteDictKeyType.str, ser_value, deser_value)
+        return SqliteDict(path, SqliteDictFieldType.str, ser_value, deser_value)
 
     @staticmethod
     def int(
@@ -67,9 +68,9 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         ser_value: Callable[[V], bytes],
         deser_value: Callable[[bytes], V],
     ) -> SqliteDict[str, V]:
-        return SqliteDict(path, SqliteDictKeyType.int, ser_value, deser_value)
+        return SqliteDict(path, SqliteDictFieldType.int, ser_value, deser_value)
 
-    def __contains__(self, key):
+    def __contains__(self, key: SqliteKey):
         return (
             self.db.execute(
                 "SELECT EXISTS ( SELECT 1 FROM data WHERE key = ? LIMIT 1)", (key,)
