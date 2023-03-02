@@ -60,7 +60,7 @@ jobs:
       - uses: messense/maturin-action@v1
         with:
           command: build
-          args: --release --no-sdist -o dist -i python
+          args: --release -o dist -i python
       # - name: Run test
       #   if: matrix.python == '3.8'
       #   run: |
@@ -92,7 +92,7 @@ jobs:
       - uses: messense/maturin-action@v1
         with:
           command: build
-          args: --release --no-sdist -o dist --universal2
+          args: --release -o dist --universal2
       - name: Run test
         if: matrix.python == '3.8'
         run: |
