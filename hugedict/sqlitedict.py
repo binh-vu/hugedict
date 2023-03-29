@@ -5,6 +5,7 @@ import sqlite3
 from pathlib import Path
 from typing import (
     Callable,
+    Iterable,
     Iterator,
     Union,
     TypeVar,
@@ -125,6 +126,13 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         if record is None:
             return default
         return self.deser_value(record[0])
+
+    def batch_insert(self, items: Iterable[Tuple[SqliteKey, V]]):
+        with self.db:
+            self.db.executemany(
+                "INSERT INTO data VALUES (:key, :value) ON CONFLICT(key) DO UPDATE SET value = :value",
+                [{"key": key, "value": self.ser_value(value)} for key, value in items],
+            )
 
     def cache(self) -> CacheDict:
         return CacheDict(self)
