@@ -42,10 +42,11 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         ser_value: Callable[[V], bytes] | Callable[[V], V],
         deser_value: Callable[[bytes], V] | Callable[[V], V],
         valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes,
+        timeout: float = 5.0,
     ):
         self.dbfile = Path(path)
         need_init = not self.dbfile.exists()
-        self.db = sqlite3.connect(str(self.dbfile))
+        self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
         if need_init:
             with self.db:
                 self.db.execute(
