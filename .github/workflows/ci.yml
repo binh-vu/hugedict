@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        python: ["3.8"]
+        python: ["3.8", "3.9", "3.10", "3.11"]
         platform: ["ubuntu-22.04", "macos-12", "windows-2022"]
     runs-on: ${{ matrix.platform }}
     steps:
@@ -39,19 +39,19 @@ jobs:
           name: wheels
           path: dist
 
-  # release:
-  #   name: Release PyPI.org
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
-  #   needs: [build]
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: wheels
-  #     - name: Publish to PyPI
-  #       uses: messense/maturin-action@v1
-  #       env:
-  #         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
-  #       with:
-  #         command: upload
-  #         args: --skip-existing *
+  release:
+    name: Release PyPI.org
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+      - name: Publish to PyPI
+        uses: messense/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+        with:
+          command: upload
+          args: --skip-existing *
