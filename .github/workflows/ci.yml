@@ -9,7 +9,7 @@ jobs:
     strategy:
       matrix:
         python: ["3.8"]
-        platform: ["ubuntu-latest"]
+        platform: ["ubuntu-22.04", "macos-12", "windows-2022"]
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
@@ -24,3 +24,32 @@ jobs:
         with:
           command: build
           args: --release -o dist -i python ${{ startsWith(matrix.platform, 'macos') && '--universal2' || '' }}
+      - name: Run test
+        if: matrix.python == '3.8' && !startsWith(matrix.platform, 'windows')
+        run: |
+          python -c "import subprocess, glob, os; file = glob.glob(os.path.join('dist', '*cp38*.whl'))[0]; subprocess.check_output(['pip', 'install', file])"
+          pip install pytest
+          mv hugedict hugedict2
+          pytest -xs tests/
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
+
+  # release:
+  #   name: Release PyPI.org
+  #   runs-on: ubuntu-latest
+  #   if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
+  #   needs: [build]
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #         name: wheels
+  #     - name: Publish to PyPI
+  #       uses: messense/maturin-action@v1
+  #       env:
+  #         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_API_TOKEN }}
+  #       with:
+  #         command: upload
+  #         args: --skip-existing *
