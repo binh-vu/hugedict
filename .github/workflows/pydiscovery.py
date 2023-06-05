@@ -39,9 +39,15 @@ elif "PYTHON_HOMES" in os.environ:
             # is the python directory
             homes[path] = get_python_version(path)[0]
         else:
+            subpaths = [os.path.join(path, subpath) for subpath in os.listdir(path)]
+            if not any(is_python_home(subpath) for subpath in subpaths):
+                subpaths = [
+                    os.path.join(subpath, subsubpath)
+                    for subpath in subpaths
+                    for subsubpath in os.listdir(subpath)
+                ]
             subhomes = {}
-            for subpath in os.listdir(path):
-                home = os.path.join(path, subpath)
+            for home in subpaths:
                 if not is_python_home(home):
                     continue
 
