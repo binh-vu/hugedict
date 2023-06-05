@@ -30,6 +30,7 @@ jobs:
           echo "------"
           export PYTHON_HOMES=$RUNNER_TOOL_CACHE/Python
           export MINIMUM_PYTHON_VERSION=3.8
+          export DELIMITER=' '
           echo $PYTHON_HOMES
           python .github/workflows/pydiscovery.py
           echo "PYIS=$(python .github/workflows/pydiscovery.py)"
