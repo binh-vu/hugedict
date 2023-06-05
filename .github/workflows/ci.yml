@@ -27,6 +27,8 @@ jobs:
           ls $RUNNER_TOOL_CACHE/Python/3.8.16/x64/
           which python
           $RUNNER_TOOL_CACHE/Python/3.8.16/x64/python --version
+
+          echo "PYIS=$RUNNER_TOOL_CACHE/Python/3.8.16/x64/bin/python $RUNNER_TOOL_CACHE/Python/3.9.16/x64/bin/python" >> "$GITHUB_ENV"
       # - name: Run test
       #   if: matrix.python == '3.8'
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
@@ -36,11 +38,7 @@ jobs:
         with:
           command: build
           args: >
-            -o dist -i 
-            $RUNNER_TOOL_CACHE/Python/3.8.16/x64/bin/python 
-            $RUNNER_TOOL_CACHE/Python/3.9.16/x64/bin/python 
-            $RUNNER_TOOL_CACHE/Python/3.10.11/x64/bin/python 
-            $RUNNER_TOOL_CACHE/Python/3.11.3/x64/bin/python
+            -o dist -i ${{ env.PYIS }}
             --release ${{ startsWith(matrix.platform, 'ubuntu') && startsWith(matrix.python, '3.8') && '--sdist' || '' }}
             ${{ startsWith(matrix.platform, 'macos') && '--target universal2-apple-darwin' || '' }}
       # - name: Run test
