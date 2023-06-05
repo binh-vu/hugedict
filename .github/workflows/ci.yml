@@ -24,6 +24,8 @@ jobs:
         run: |
           ls $RUNNER_TOOL_CACHE/Python/
           ls $RUNNER_TOOL_CACHE/Python/3.8.16/
+          ls $RUNNER_TOOL_CACHE/Python/3.8.16/x64/
+          ls $RUNNER_TOOL_CACHE/Python/3.8.16/x64.complete/
       # - name: Run test
       #   if: matrix.python == '3.8'
       #   run: cargo test --no-default-features --features pyo3/auto-initialize
