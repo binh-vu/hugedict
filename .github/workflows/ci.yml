@@ -29,7 +29,9 @@ jobs:
           $RUNNER_TOOL_CACHE/Python/3.8.16/x64/python --version
           export PYTHON_HOMES=$RUNNER_TOOL_CACHE/Python
           export MINIMUM_PYTHON_VERSION=3.8
-          echo "PYIS=$(python .github/workflows/pydiscovery.py)" >> "$GITHUB_ENV"
+          echo "PYIS=$(python .github/workflows/pydiscovery.py)"
+          exit 1
+          # >> "$GITHUB_ENV"
           # echo "PYIS=$RUNNER_TOOL_CACHE/Python/3.8.16/x64/bin/python $RUNNER_TOOL_CACHE/Python/3.9.16/x64/bin/python" >> "$GITHUB_ENV"
       # - name: Run test
       #   if: matrix.python == '3.8'
