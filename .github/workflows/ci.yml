@@ -23,7 +23,8 @@ jobs:
       - name: Discover python
         run: |
           echo "PYTHONS=$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir ${{ runner.tool_cache }}/Python)" >> "$GITHUB_ENV"
-      - name: Run test
+      - name: Run Cargo test
+        if: "startsWith(matrix.platform, 'ubuntu')"
         run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         env:
@@ -34,8 +35,7 @@ jobs:
             -o dist -i ${{ env.PYTHONS }}
             --release ${{ startsWith(matrix.platform, 'ubuntu') && '--sdist' || '' }}
             ${{ startsWith(matrix.platform, 'macos') && '--target universal2-apple-darwin' || '' }}
-      - name: Run test
-        if: "!startsWith(matrix.platform, 'windows')"
+      - name: Run Python test
         run: |
           python -c "import subprocess, glob, os; file = glob.glob(os.path.join('dist', '*cp38*.whl'))[0]; subprocess.check_output(['pip', 'install', file])"
           pip install pytest
