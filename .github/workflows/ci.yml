@@ -25,6 +25,7 @@ jobs:
         run: |
           python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir ${{ env.RUNNER_TOOL_CACHE }}/Python
           python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir $RUNNER_TOOL_CACHE/Python
+          python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir ${{ runner.tool_cache }}/Python
           echo "PYTHONS=$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir $RUNNER_TOOL_CACHE/Python)" >> "$GITHUB_ENV"
       - name: Run test
         run: cargo test --no-default-features --features pyo3/auto-initialize
