@@ -35,15 +35,12 @@ parser.add_argument("--root-dir", required=True)
 parser.add_argument("--delimiter", default=":", help="delimiter to separate pythons")
 
 args = parser.parse_args()
-print(args)
 
 rootdir = os.path.abspath(args.root_dir)
-if rootdir.find(":") != -1:
-    paths = rootdir.split(":")
+if rootdir.find(" ") != -1:
+    paths = rootdir.split(" ")
 else:
     paths = [rootdir]
-
-print(paths, rootdir)
 
 homes = {}
 for path in paths:
