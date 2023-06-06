@@ -87,5 +87,5 @@ if "MINIMUM_PYTHON_VERSION" in os.environ:
     homes = {h: homes[h] for h in filtered_homes}
 
 DELIMITER = os.environ.get("DELIMITER", ":")
-print(DELIMITER.join(homes))
+print(DELIMITER.join([get_python(home) for home in homes]))
 exit(0)
