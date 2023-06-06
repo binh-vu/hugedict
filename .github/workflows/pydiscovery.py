@@ -42,7 +42,6 @@ if rootdir.find(":") != -1:
 else:
     paths = [rootdir]
 
-print(rootdir, paths)
 homes = {}
 for path in paths:
     if is_python_home(path):
