@@ -22,11 +22,7 @@ jobs:
             3.11
       - name: Discover python
         run: |
-          echo $RUNNER_TOOL_CACHE/Python
-          python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir $RUNNER_TOOL_CACHE/Python
-          echo "PYTHONS=$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir $RUNNER_TOOL_CACHE/Python)"
           echo "PYTHONS=$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir $RUNNER_TOOL_CACHE/Python)" >> "$GITHUB_ENV"
-          exit (1)
       - name: Run test
         run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
@@ -51,37 +47,37 @@ jobs:
           name: wheels
           path: dist
 
-  # build-manylinux:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Build wheels
-  #       run: |
-  #         docker run --rm -w /project -v $(pwd):/project \
-  #           -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
-  #           -e PYTHON_HOMES=/opt/python \
-  #           -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
-  #           quay.io/pypa/manylinux2014_x86_64:latest \
-  #           bash /project/.github/workflows/build.sh -t x86_64-unknown-linux-gnu
-  #     - name: Upload wheels
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: wheels
-  #         path: dist
+  build-manylinux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build wheels
+        run: |
+          docker run --rm -w /project -v $(pwd):/project \
+            -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
+            -e PYTHON_HOMES=/opt/python \
+            -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
+            quay.io/pypa/manylinux2014_x86_64:latest \
+            bash /project/.github/workflows/build.sh -t x86_64-unknown-linux-gnu
+      - name: Upload wheels
+        uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: dist
 
-  # release:
-  #   name: Release PyPI.org
-  #   runs-on: ubuntu-latest
-  #   if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
-  #   needs: [build]
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #         name: wheels
-  #     - name: Publish to PyPI
-  #       uses: messense/maturin-action@v1
-  #       env:
-  #         MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-  #       with:
-  #         command: upload
-  #         args: --skip-existing *
+  release:
+    name: Release PyPI.org
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
+    needs: [build]
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+      - name: Publish to PyPI
+        uses: messense/maturin-action@v1
+        env:
+          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+        with:
+          command: upload
+          args: --skip-existing *
