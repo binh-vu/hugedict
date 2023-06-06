@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(prog="discover installed python")
 parser.add_argument("--min-version")
 parser.add_argument("--select-versions")
 parser.add_argument("--root-dir", required=True)
-parser.add_argument("--delimiter", default=":", help="delimiter to separate pythons")
+parser.add_argument("--delimiter", default=" ", help="delimiter to separate pythons")
 
 args = parser.parse_args()
 
