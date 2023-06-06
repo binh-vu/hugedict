@@ -1,5 +1,5 @@
 from __future__ import print_function
-import os, subprocess, re
+import os, subprocess, re, argparse
 from typing import Tuple
 
 
@@ -28,39 +28,49 @@ def get_python_version(home: str) -> Tuple[str, str]:
     return version, type
 
 
+parser = argparse.ArgumentParser(prog="discover installed python")
+parser.add_argument("--min-version")
+parser.add_argument("--select-versions")
+parser.add_argument("--root-dir", required=True)
+parser.add_argument("--delimiter", default=":", help="delimiter to separate pythons")
+
+args = parser.parse_args()
+
+rootdir = os.path.abspath(args.root_dir)
+if rootdir.find(":") != -1:
+    paths = rootdir.split(":")
+else:
+    paths = [rootdir]
+
 homes = {}
-if "PYTHON_HOME" in os.environ:
-    home = os.environ["PYTHON_HOME"]
-    homes[home] = get_python_version(home)[0]
-elif "PYTHON_HOMES" in os.environ:
-    lst = os.environ["PYTHON_HOMES"].split(":")
-    for path in lst:
-        if is_python_home(path):
-            # is the python directory
-            homes[path] = get_python_version(path)[0]
-        else:
-            subpaths = [os.path.join(path, subpath) for subpath in os.listdir(path)]
-            if not any(is_python_home(subpath) for subpath in subpaths):
-                subpaths = [
-                    os.path.join(subpath, subsubpath)
-                    for subpath in subpaths
-                    for subsubpath in os.listdir(subpath)
-                ]
-            subhomes = {}
-            for home in subpaths:
-                if not is_python_home(home):
-                    continue
-                version, pytype = get_python_version(home)
+for path in paths:
+    if is_python_home(path):
+        # is the python directory
+        homes[path] = get_python_version(path)[0]
+    else:
+        subpaths = [os.path.join(path, subpath) for subpath in os.listdir(path)]
+        if not any(is_python_home(subpath) for subpath in subpaths):
+            subpaths = [
+                os.path.join(subpath, subsubpath)
+                for subpath in subpaths
+                if os.path.isdir(subpath)
+                for subsubpath in os.listdir(subpath)
+            ]
+        subhomes = {}
+        for home in subpaths:
+            if not is_python_home(home):
+                continue
+            version, pytype = get_python_version(home)
 
-                # do not keep different patches (only keep major.minor)
-                mm_version = ".".join(version.split(".")[:2])
-                subhomes[mm_version, pytype] = (home, version)
+            # do not keep different patches (only keep major.minor)
+            mm_version = ".".join(version.split(".")[:2])
+            subhomes[mm_version, pytype] = (home, version)
 
-            for home, version in subhomes.values():
-                homes[home] = version
+        for home, version in subhomes.values():
+            homes[home] = version
 
-if "PYTHON_VERSIONS" in os.environ:
-    versions = os.environ["PYTHON_VERSIONS"].split(",")
+if args.select_versions is not None:
+    versions = args.select_versions.split(",")
     filtered_homes = []
     for home, home_version in homes.items():
         for version in versions:
@@ -71,8 +81,8 @@ if "PYTHON_VERSIONS" in os.environ:
     homes = {h: homes[h] for h in filtered_homes}
 
 
-if "MINIMUM_PYTHON_VERSION" in os.environ:
-    minimum_version = [int(d) for d in os.environ["MINIMUM_PYTHON_VERSION"].split(".")]
+if args.min_version is not None:
+    minimum_version = [int(d) for d in args.min_version.split(".")]
     filtered_homes = []
     for home, home_version in homes.items():
         pyversion = home_version.split(".")
@@ -83,6 +93,5 @@ if "MINIMUM_PYTHON_VERSION" in os.environ:
 
     homes = {h: homes[h] for h in filtered_homes}
 
-DELIMITER = os.environ.get("DELIMITER", ":")
-print(DELIMITER.join([get_python(home) for home in homes]))
+print(args.delimiter.join([get_python(home) for home in homes]))
 exit(0)

@@ -21,7 +21,7 @@ jobs:
             3.10
             3.11
       - name: Discover python
-        run: PYTHON_HOMES=$RUNNER_TOOL_CACHE/Python MINIMUM_PYTHON_VERSION=3.8 DELIMITER=' ' echo "PYTHONS='$(python .github/workflows/pydiscovery.py)'" >> "$GITHUB_ENV"
+        run: echo "PYTHONS='$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir '$RUNNER_TOOL_CACHE/Python')'" >> "$GITHUB_ENV"
       - name: Run test
         run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
