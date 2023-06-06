@@ -28,6 +28,7 @@ then
 fi
 
 python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOME
+IFS=':' read -a PYTHON_EXECS <(python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOME)
 
 # ##############################################
 echo "::group::Discovering Python"
