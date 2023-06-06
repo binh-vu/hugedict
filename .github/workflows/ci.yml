@@ -36,7 +36,7 @@ jobs:
           command: build
           args: >
             -o dist -i ${{ env.PYTHONS }}
-            --release ${{ startsWith(matrix.platform, 'ubuntu') && startsWith(matrix.python, '3.8') && '--sdist' || '' }}
+            --release ${{ startsWith(matrix.platform, 'ubuntu') && '--sdist' || '' }}
             ${{ startsWith(matrix.platform, 'macos') && '--target universal2-apple-darwin' || '' }}
       - name: Run test
         if: !startsWith(matrix.platform , 'windows')
