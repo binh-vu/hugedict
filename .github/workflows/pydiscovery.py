@@ -39,12 +39,17 @@ elif "PYTHON_HOMES" in os.environ:
             # is the python directory
             homes[path] = get_python_version(path)[0]
         else:
+            subpaths = [os.path.join(path, subpath) for subpath in os.listdir(path)]
+            if not any(is_python_home(subpath) for subpath in subpaths):
+                subpaths = [
+                    os.path.join(subpath, subsubpath)
+                    for subpath in subpaths
+                    for subsubpath in os.listdir(subpath)
+                ]
             subhomes = {}
-            for subpath in os.listdir(path):
-                home = os.path.join(path, subpath)
+            for home in subpaths:
                 if not is_python_home(home):
                     continue
-
                 version, pytype = get_python_version(home)
 
                 # do not keep different patches (only keep major.minor)
@@ -78,5 +83,6 @@ if "MINIMUM_PYTHON_VERSION" in os.environ:
 
     homes = {h: homes[h] for h in filtered_homes}
 
-print(":".join(homes))
+DELIMITER = os.environ.get("DELIMITER", ":")
+print(DELIMITER.join([get_python(home) for home in homes]))
 exit(0)

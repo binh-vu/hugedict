@@ -84,25 +84,25 @@ fi
 
 # ##############################################
 echo "::group::Discovering Python"
-IFS=':' read -a PYTHON_HOMES < <(MINIMUM_PYTHON_VERSION=3.8 python $SCRIPT_DIR/pydiscovery.py)
-if [ ${#PYTHON_HOMES[@]} -eq 0 ]; then
+IFS=':' read -a PYTHON_EXECS < <(MINIMUM_PYTHON_VERSION=3.8 python $SCRIPT_DIR/pydiscovery.py)
+if [ ${#PYTHON_EXECS[@]} -eq 0 ]; then
     echo "No Python found. Did you forget to set any environment variable PYTHON_HOME or PYTHON_HOMES?"
 else
-    for PYTHON_HOME in "${PYTHON_HOMES[@]}"
+    for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
     do
-        echo "Found $PYTHON_HOME"
+        echo "Found $PYTHON_EXEC"
     done    
 fi
 echo "::endgroup::"
 echo
 
 # ##############################################
-for PYTHON_HOME in "${PYTHON_HOMES[@]}"
+for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
 do
-    echo "::group::Building for Python $PYTHON_HOME"
+    echo "::group::Building for Python $PYTHON_EXEC"
 
-    echo "Run: maturin build -r -o dist -i $PYTHON_HOME/bin/python3 --target $target"
-    "maturin" build -r -o dist -i "$PYTHON_HOME/bin/python3" --target $target
+    echo "Run: maturin build -r -o dist -i $PYTHON_EXEC --target $target"
+    "maturin" build -r -o dist -i "$PYTHON_EXEC" --target $target
 
     echo "::endgroup::"
     echo
