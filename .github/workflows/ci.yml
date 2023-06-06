@@ -20,15 +20,14 @@ jobs:
             3.9
             3.10
             3.11
-      - name: Test
+      - name: Run test
+        run: cargo test --no-default-features --features pyo3/auto-initialize
+      - name: Discover python
         run: |
           export PYTHON_HOMES=$RUNNER_TOOL_CACHE/Python
           export MINIMUM_PYTHON_VERSION=3.8
           export DELIMITER=' '
           echo "PYTHONS='$(python .github/workflows/pydiscovery.py)'" >> "$GITHUB_ENV"
-      - name: Run test
-        if: matrix.python == '3.8'
-        run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         env:
           MACOSX_DEPLOYMENT_TARGET: 10.14
