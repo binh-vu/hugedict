@@ -28,7 +28,6 @@ then
 fi
 
 python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOME
-exit 1
 
 # ##############################################
 echo "::group::Discovering Python"
