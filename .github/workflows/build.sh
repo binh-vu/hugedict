@@ -7,9 +7,6 @@ set -e
 #
 # Envionment Arguments: (handled by `args.py`)
 #   PYTHON_HOME: the path to the Python installation, which will be used to build the wheels for. 
-#        Empty if you want to use multiple Pythons by providing PYTHON_HOMES. This has the highest priority. If set, we won't consider PYTHON_HOMES and PYTHON_VERSIONS
-#   PYTHON_HOMES: comma-separated directories that either contains Python installations or are Python installations.
-#   PYTHON_VERSIONS: versions of Python separated by comma if you want to restricted to specific versions.
 # Arguments:
 #   -t <target>: target platform. See https://doc.rust-lang.org/nightly/rustc/platform-support.html
 
@@ -29,6 +26,23 @@ then
     echo "target is not set (-t <target>). See more: https://doc.rust-lang.org/nightly/rustc/platform-support.html"
     exit 1
 fi
+
+python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOME
+exit 1
+
+# ##############################################
+echo "::group::Discovering Python"
+IFS=':' read -a PYTHON_EXECS <(python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOME)
+if [ ${#PYTHON_EXECS[@]} -eq 0 ]; then
+    echo "No Python found. Did you forget to set any environment variable PYTHON_HOME?"
+else
+    for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
+    do
+        echo "Found $PYTHON_EXEC"
+    done    
+fi
+echo "::endgroup::"
+echo
 
 echo "::group::Setup build tools"
 # ##############################################
@@ -81,20 +95,6 @@ then
 else
     echo "Maturin is already installed."
 fi
-
-# ##############################################
-echo "::group::Discovering Python"
-IFS=':' read -a PYTHON_EXECS <(python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOMES)
-if [ ${#PYTHON_EXECS[@]} -eq 0 ]; then
-    echo "No Python found. Did you forget to set any environment variable PYTHON_HOME or PYTHON_HOMES?"
-else
-    for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
-    do
-        echo "Found $PYTHON_EXEC"
-    done    
-fi
-echo "::endgroup::"
-echo
 
 # ##############################################
 for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
