@@ -144,22 +144,37 @@ impl CompressionOptions {
 #[derive(Deserialize, Serialize, Clone, Eq, PartialEq)]
 #[pyclass(module = "hugedict.hugedict.rocksdb")]
 pub struct Options {
+    #[pyo3(get, set)]
     pub create_if_missing: Option<bool>,
+    #[pyo3(get, set)]
     pub max_open_files: Option<i32>,
+    #[pyo3(get, set)]
     pub use_fsync: Option<bool>,
+    #[pyo3(get, set)]
     pub bytes_per_sync: Option<u64>,
     // original option: ColumnFamilyOptions* OptimizeForPointLookup(uint64_t block_cache_size_mb);
+    #[pyo3(get, set)]
     pub optimize_for_point_lookup: Option<u64>,
+    #[pyo3(get, set)]
     pub table_cache_numshardbits: Option<i32>,
+    #[pyo3(get, set)]
     pub max_write_buffer_number: Option<i32>,
+    #[pyo3(get, set)]
     pub write_buffer_size: Option<usize>,
+    #[pyo3(get, set)]
     pub target_file_size_base: Option<u64>,
+    #[pyo3(get, set)]
     pub min_write_buffer_number_to_merge: Option<i32>,
+    #[pyo3(get, set)]
     pub level_zero_stop_writes_trigger: Option<i32>,
+    #[pyo3(get, set)]
     pub level_zero_slowdown_writes_trigger: Option<i32>,
     pub compaction_style: Option<DBCompactionStyle>,
+    #[pyo3(get, set)]
     pub disable_auto_compactions: Option<bool>,
+    #[pyo3(get, set)]
     pub max_background_jobs: Option<i32>,
+    #[pyo3(get, set)]
     pub max_subcompactions: Option<u32>,
     pub compression_type: Option<DBCompressionType>,
     pub bottommost_compression_type: Option<DBCompressionType>,
@@ -168,7 +183,9 @@ pub struct Options {
     pub bottommost_compression_opts: Option<CompressionOptions>,
     // in here: http://rocksdb.org/blog/2021/05/31/dictionary-compression.html
     // recommended to 100x of max_dict_bytes
+    #[pyo3(get, set)]
     pub zstd_max_train_bytes: Option<i32>,
+    #[pyo3(get, set)]
     pub bottommost_zstd_max_train_bytes: Option<i32>,
 }
 
