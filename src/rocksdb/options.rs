@@ -1,7 +1,7 @@
 use pyo3::{
     exceptions::PyValueError,
     prelude::*,
-    types::{PyBytes, PyString},
+    types::{PyBytes, PyDict, PyString},
 };
 use rocksdb::{
     DBCompactionStyle as RocksDBCompactionStyle, DBCompressionType as RocksDBCompressionType,
@@ -134,6 +134,15 @@ impl CompressionOptions {
             strategy,
             max_dict_bytes,
         }
+    }
+
+    pub fn to_dict<'t>(&self, py: Python<'t>) -> PyResult<&'t PyDict> {
+        let dict = PyDict::new(py);
+        dict.set_item("window_bits", self.window_bits)?;
+        dict.set_item("level", self.level)?;
+        dict.set_item("strategy", self.strategy)?;
+        dict.set_item("max_dict_bytes", self.max_dict_bytes)?;
+        Ok(dict)
     }
 }
 

@@ -40,6 +40,8 @@ class CompressionOptions:
     strategy: int
     max_dict_bytes: int
 
+    def to_dict(self) -> dict: ...
+
 # Checkout the list of options here:
 # - https://github.com/facebook/rocksdb/blob/0e0a19832e5f1e3584590edf796abd05c484e649/include/rocksdb/options.h#L432
 # - https://github.com/facebook/rocksdb/blob/main/include/rocksdb/advanced_options.h
