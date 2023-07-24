@@ -1,9 +1,11 @@
 from functools import partial
 from pathlib import Path
 from typing import List, Mapping, Tuple
+
 import pytest
+
 from hugedict.cachedict import CacheDict
-from hugedict.hugedict.rocksdb import RocksDBDict, Options, fixed_prefix_alike
+from hugedict.hugedict.rocksdb import Options, RocksDBDict, fixed_prefix_alike
 from tests.python.test_mapping import TestMutableMappingSuite
 
 
@@ -49,6 +51,9 @@ class TestRocksDBDict(TestMutableMappingSuite):
     @pytest.fixture
     def unknown_keys(self) -> List:
         return ["Q10", 5, b"whatever", None]
+
+    def test_path(self, mapping: RocksDBDict, wdprops: Path):
+        assert mapping.path == str(wdprops)
 
     def test_cache(
         self,

@@ -3,14 +3,14 @@ from typing import (
     Callable,
     Generic,
     Iterator,
+    List,
     Literal,
     Optional,
-    List,
     Tuple,
     TypedDict,
 )
 
-from hugedict.types import KP, V, HugeMutableMapping
+from hugedict.types import KP, HugeMutableMapping, V
 
 DBCompactionStyle = Literal["level", "universal", "fifo"]
 DBCompressionStyle = Literal[
@@ -171,6 +171,9 @@ class RocksDBDict(HugeMutableMapping[KP, V]):
         secondary_mode: bool = False,
         secondary_path: Optional[str] = None,
     ): ...
+    @property
+    def path(self) -> str:
+        """Get path to the database."""
     @property
     def deser_value(self) -> Callable[[memoryview], V]:
         """Deserialize value from a memoryview."""
