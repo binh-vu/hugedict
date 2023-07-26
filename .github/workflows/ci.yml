@@ -23,6 +23,13 @@ jobs:
       - name: Discover python
         run: |
           echo "PYTHONS=$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir ${{ runner.tool_cache }}/Python)" >> "$GITHUB_ENV"
+      - name: Cache Rust target directory
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}
+          path: |
+            ~/.cargo  
+            target
       - name: Run Cargo test
         if: "startsWith(matrix.platform, 'ubuntu')"
         run: cargo test --no-default-features --features pyo3/auto-initialize
@@ -52,6 +59,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - name: Cache Rust target directory
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}
+          path: target
       - name: Build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
