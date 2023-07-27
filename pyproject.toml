@@ -33,7 +33,7 @@ Homepage = "https://github.com/binh-vu/hugedict"
 Repository = "https://github.com/binh-vu/hugedict"
 
 [tool.maturin]
-features = ["pyo3/extension-module"]
+features = ["extension-module"]
 
 [build-system]
 requires = ["maturin>=1.0,<2.0"]
