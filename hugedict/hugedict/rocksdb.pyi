@@ -5,8 +5,10 @@ from typing import (
     Iterator,
     List,
     Literal,
+    NotRequired,
     Optional,
     Tuple,
+    TypeAlias,
     TypedDict,
 )
 
@@ -96,10 +98,13 @@ class RecordType(TypedDict):
     # object's attribute contains the value, None if value is the object itself.
     value: Optional[str]
 
+NumberType: TypeAlias = Literal["f32", "f64", "i32", "i64", "u32", "u64"]
+
 class FileFormat(TypedDict):
     record_type: RecordType
     # whether the file is sorted or not.
     is_sorted: bool
+    number_type: NotRequired[Optional[NumberType]]
 
 def load(
     dbpath: str,

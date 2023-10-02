@@ -8,6 +8,9 @@ pub enum HugeDictError {
     #[error("No files provided")]
     NoFiles,
 
+    #[error("No SST files produced")]
+    NoSSTFiles,
+
     /// When file is not in the expected format.
     #[error(
         "Content is not in the expected format: {format:?}. The invalid content is: {content:?}"

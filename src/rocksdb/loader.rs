@@ -57,11 +57,29 @@ pub enum RecordType {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum NumberType {
+    #[serde(rename = "f32")]
+    F32,
+    #[serde(rename = "f64")]
+    F64,
+    #[serde(rename = "i32")]
+    I32,
+    #[serde(rename = "i64")]
+    I64,
+    #[serde(rename = "u32")]
+    U32,
+    #[serde(rename = "u64")]
+    U64,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct FileFormat {
     // record type including function to extract key and value a record
     pub record_type: RecordType,
     // whether the file is sorted or not.
     pub is_sorted: bool,
+    // if value is a number, specify the number type
+    pub number_type: Option<NumberType>,
 }
 
 /// Load files into RocksDB by building SST files and ingesting them.
@@ -103,7 +121,7 @@ pub fn load<P: AsRef<Path> + Sync>(
                 Ok(None)
             }
         })
-        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_some())
+        .filter(|r| r.is_err() || r.as_ref().unwrap().is_some())
         .map(|r| match r {
             Ok(path) => Ok(path.unwrap()),
             Err(e) => Err(e),
@@ -120,7 +138,7 @@ pub fn load<P: AsRef<Path> + Sync>(
     let sst_files = sst_files_?;
 
     if sst_files.len() == 0 {
-        return Err(HugeDictError::NoFiles.into());
+        return Err(HugeDictError::NoSSTFiles.into());
     }
 
     // ingest the sst files into RocksDB
@@ -350,15 +368,23 @@ pub fn build_sst_file(
                         serde_json::Value::Bool(s) => vec![*s as u8],
                         // always use little endian so that the databases can move between platform without
                         // rebuilt
-                        serde_json::Value::Number(s) if s.is_f64() => {
-                            s.as_f64().unwrap().to_le_bytes().to_vec()
-                        }
-                        serde_json::Value::Number(s) if s.is_i64() => {
-                            s.as_f64().unwrap().to_le_bytes().to_vec()
-                        }
-                        serde_json::Value::Number(s) if s.is_u64() => {
-                            s.as_u64().unwrap().to_le_bytes().to_vec()
-                        }
+                        serde_json::Value::Number(s) => match &format.number_type {
+                            None => {
+                                return Err(HugeDictError::InvalidFormat("Expect number_type to be specified as data contains numeric value").into());
+                            }
+                            Some(NumberType::F32) => {
+                                (s.as_f64().unwrap() as f32).to_le_bytes().to_vec()
+                            }
+                            Some(NumberType::F64) => s.as_f64().unwrap().to_le_bytes().to_vec(),
+                            Some(NumberType::I32) => {
+                                (s.as_i64().unwrap() as i32).to_le_bytes().to_vec()
+                            }
+                            Some(NumberType::I64) => s.as_i64().unwrap().to_le_bytes().to_vec(),
+                            Some(NumberType::U32) => {
+                                (s.as_u64().unwrap() as u32).to_le_bytes().to_vec()
+                            }
+                            Some(NumberType::U64) => s.as_u64().unwrap().to_le_bytes().to_vec(),
+                        },
                         serde_json::Value::Null => vec![],
                         _ => serde_json::to_string(o)
                             .expect("No bug in serde_json package")
@@ -398,15 +424,23 @@ pub fn build_sst_file(
                         serde_json::Value::Bool(s) => vec![*s as u8],
                         // always use little endian so that the databases can move between platform without
                         // rebuilt
-                        serde_json::Value::Number(s) if s.is_f64() => {
-                            s.as_f64().unwrap().to_le_bytes().to_vec()
-                        }
-                        serde_json::Value::Number(s) if s.is_i64() => {
-                            s.as_f64().unwrap().to_le_bytes().to_vec()
-                        }
-                        serde_json::Value::Number(s) if s.is_u64() => {
-                            s.as_u64().unwrap().to_le_bytes().to_vec()
-                        }
+                        serde_json::Value::Number(s) => match &format.number_type {
+                            None => {
+                                return Err(HugeDictError::InvalidFormat("Expect number_type to be specified as data contains numeric value").into());
+                            }
+                            Some(NumberType::F32) => {
+                                (s.as_f64().unwrap() as f32).to_le_bytes().to_vec()
+                            }
+                            Some(NumberType::F64) => s.as_f64().unwrap().to_le_bytes().to_vec(),
+                            Some(NumberType::I32) => {
+                                (s.as_i64().unwrap() as i32).to_le_bytes().to_vec()
+                            }
+                            Some(NumberType::I64) => s.as_i64().unwrap().to_le_bytes().to_vec(),
+                            Some(NumberType::U32) => {
+                                (s.as_u64().unwrap() as u32).to_le_bytes().to_vec()
+                            }
+                            Some(NumberType::U64) => s.as_u64().unwrap().to_le_bytes().to_vec(),
+                        },
                         serde_json::Value::Null => vec![],
                         _ => serde_json::to_string(o)
                             .expect("No bug in serde_json package")
