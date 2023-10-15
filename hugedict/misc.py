@@ -1,11 +1,12 @@
 import functools
 import gzip
-import threading
-import zstandard as zstd
 import pickle
+import threading
 from typing import Any, Callable
-from hugedict.types import T
 
+import zstandard as zstd
+
+from hugedict.types import T
 
 container = threading.local()
 container.zstd_3_compressor = zstd.ZstdCompressor(level=3)

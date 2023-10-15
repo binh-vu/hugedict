@@ -116,7 +116,7 @@ impl<'s> FromPyObject<'s> for PrefixExtractor {
 /// - http://rocksdb.org/blog/2021/05/31/dictionary-compression.html
 /// - https://github.com/facebook/rocksdb/wiki/Space-Tuning
 #[derive(Deserialize, Serialize, Clone, Eq, PartialEq)]
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 pub struct CompressionOptions {
     window_bits: i32,
     level: i32,
@@ -151,7 +151,7 @@ impl CompressionOptions {
 /// - https://github.com/facebook/rocksdb/blob/main/include/rocksdb/advanced_options.h
 /// - https://docs.rs/rocksdb/latest/rocksdb/struct.Options.html
 #[derive(Deserialize, Serialize, Clone, Eq, PartialEq)]
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 pub struct Options {
     #[pyo3(get, set)]
     pub create_if_missing: Option<bool>,
@@ -201,32 +201,32 @@ pub struct Options {
 #[pymethods]
 impl Options {
     #[new]
-    #[args(
-        "*",
-        create_if_missing = "None",
-        max_open_files = "None",
-        use_fsync = "None",
-        bytes_per_sync = "None",
-        optimize_for_point_lookup = "None",
-        table_cache_numshardbits = "None",
-        max_write_buffer_number = "None",
-        write_buffer_size = "None",
-        target_file_size_base = "None",
-        min_write_buffer_number_to_merge = "None",
-        level_zero_stop_writes_trigger = "None",
-        level_zero_slowdown_writes_trigger = "None",
-        compaction_style = "None",
-        disable_auto_compactions = "None",
-        max_background_jobs = "None",
-        max_subcompactions = "None",
-        compression_type = "self::DBCompressionType::Lz4",
-        bottommost_compression_type = "None",
-        prefix_extractor = "None",
-        compression_opts = "None",
-        bottommost_compression_opts = "None",
-        zstd_max_train_bytes = "None",
-        bottommost_zstd_max_train_bytes = "None"
-    )]
+    #[pyo3(signature = (
+        *,
+        create_if_missing = None,
+        max_open_files = None,
+        use_fsync = None,
+        bytes_per_sync = None,
+        optimize_for_point_lookup = None,
+        table_cache_numshardbits = None,
+        max_write_buffer_number = None,
+        write_buffer_size = None,
+        target_file_size_base = None,
+        min_write_buffer_number_to_merge = None,
+        level_zero_stop_writes_trigger = None,
+        level_zero_slowdown_writes_trigger = None,
+        compaction_style = None,
+        disable_auto_compactions = None,
+        max_background_jobs = None,
+        max_subcompactions = None,
+        compression_type = self::DBCompressionType::Lz4,
+        bottommost_compression_type = None,
+        prefix_extractor = None,
+        compression_opts = None,
+        bottommost_compression_opts = None,
+        zstd_max_train_bytes = None,
+        bottommost_zstd_max_train_bytes = None
+    ))]
     fn new(
         create_if_missing: Option<bool>,
         max_open_files: Option<i32>,
@@ -280,13 +280,13 @@ impl Options {
     }
 
     fn __getstate__(&self, py: Python) -> PyResult<PyObject> {
-        let encode: Vec<u8> = bincode::serialize(self).unwrap();
+        let encode: Vec<u8> = postcard::to_allocvec(self).unwrap();
         Ok(PyBytes::new(py, &encode).into())
     }
 
     fn __setstate__(&mut self, py: Python, state: PyObject) -> PyResult<()> {
         let b = state.as_ref(py).downcast::<PyBytes>()?.as_bytes();
-        let o: Options = bincode::deserialize(b).map_err(|_err| {
+        let o: Options = postcard::from_bytes::<Options>(b).map_err(|_err| {
             PyValueError::new_err(format!("Cannot deserialize Options: corrupted state"))
         })?;
 

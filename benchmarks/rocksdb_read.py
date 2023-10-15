@@ -1,20 +1,19 @@
 # Prerequisites:
 # - install sem-desc: `pip install sem-desc`
 # - data to test with in the ./data directory (e.g., ./data/wdentities/part-*.tsv.gz)
-from functools import partial
 import random
-from loguru import logger
-import orjson
+from functools import partial
 from pathlib import Path
-import serde.textline
-from timer import Timer
-from rocksdb import DB, Options  # type: ignore
 
+import orjson
+import serde.textline
 from hugedict_v1.rocksdb import RocksDBDict
-from hugedict.hugedict.rocksdb import (
-    RocksDBDict as RustRocksDBDict,
-    Options as RustOptions,
-)
+from loguru import logger
+from timer import Timer
+
+from hugedict.rocksdb import Options as RustOptions
+from hugedict.rocksdb import RocksDBDict as RustRocksDBDict
+from rocksdb import DB, Options  # type: ignore
 
 bench_dir = Path(__file__).parent
 

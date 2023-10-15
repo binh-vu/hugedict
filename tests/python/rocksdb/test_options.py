@@ -1,4 +1,4 @@
-from hugedict.hugedict.rocksdb import CompressionOptions
+from hugedict.core.rocksdb import CompressionOptions
 
 
 def test_compression_options_to_dict():

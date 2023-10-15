@@ -5,7 +5,7 @@ from typing import List, Mapping, Tuple
 import pytest
 
 from hugedict.cachedict import CacheDict
-from hugedict.hugedict.rocksdb import Options, RocksDBDict, fixed_prefix_alike
+from hugedict.core.rocksdb import Options, RocksDBDict, fixed_prefix_alike
 from tests.python.test_mapping import TestMutableMappingSuite
 
 

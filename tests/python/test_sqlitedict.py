@@ -1,14 +1,12 @@
-from functools import partial
-import os
-from pathlib import Path
-from subprocess import Popen, check_call
 import sys
+from pathlib import Path
+from subprocess import check_call
 from typing import List, Mapping, Tuple
+
 import pytest
-from hugedict.cachedict import CacheDict
-from hugedict.hugedict.rocksdb import RocksDBDict, Options, fixed_prefix_alike
+
+from hugedict.sqlite import SqliteDict
 from tests.python.test_mapping import TestMutableMappingSuite
-from hugedict.sqlitedict import SqliteDict
 
 
 class TestSqliteDict(TestMutableMappingSuite):

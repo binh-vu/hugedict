@@ -6,17 +6,16 @@ use super::{
     loader::{py_build_sst_file, py_ingest_sst_files, py_load},
     mrsw::{primary_db, stop_primary_db, SecondaryDB},
 };
-use pyo3::prelude::*;
-use pyo3::type_object::PyTypeObject;
+use pyo3::{prelude::*, PyTypeInfo};
 
 pub(crate) fn register(py: Python<'_>, m: &PyModule) -> PyResult<()> {
     let submodule = PyModule::new(py, "rocksdb")?;
 
-    def_pyfunction!(submodule, "hugedict.hugedict.rocksdb", py_load);
-    def_pyfunction!(submodule, "hugedict.hugedict.rocksdb", py_build_sst_file);
-    def_pyfunction!(submodule, "hugedict.hugedict.rocksdb", py_ingest_sst_files);
-    def_pyfunction!(submodule, "hugedict.hugedict.rocksdb", primary_db);
-    def_pyfunction!(submodule, "hugedict.hugedict.rocksdb", stop_primary_db);
+    def_pyfunction!(submodule, "hugedict.core.rocksdb", py_load);
+    def_pyfunction!(submodule, "hugedict.core.rocksdb", py_build_sst_file);
+    def_pyfunction!(submodule, "hugedict.core.rocksdb", py_ingest_sst_files);
+    def_pyfunction!(submodule, "hugedict.core.rocksdb", primary_db);
+    def_pyfunction!(submodule, "hugedict.core.rocksdb", stop_primary_db);
 
     submodule.add_class::<Options>()?;
     submodule.add_class::<CompressionOptions>()?;
@@ -30,7 +29,7 @@ pub(crate) fn register(py: Python<'_>, m: &PyModule) -> PyResult<()> {
 
     py.import("sys")?
         .getattr("modules")?
-        .set_item("hugedict.hugedict.rocksdb", submodule)?;
+        .set_item("hugedict.core.rocksdb", submodule)?;
 
     Ok(())
 }

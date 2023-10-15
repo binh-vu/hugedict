@@ -2,16 +2,16 @@
 # - install sem-desc: `pip install sem-desc`
 # - data to test with in the ./data directory (e.g., ./data/wdentities/part-*.tsv.gz)
 
-from dataclasses import dataclass
 import multiprocessing
 import shutil
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
 from hugedict_v1.loader import FileFormat, load
-from rocksdb import DB, Options  # type: ignore
 from sm.prelude import M
 
+from rocksdb import DB, Options  # type: ignore
 
 multiprocessing.set_start_method("fork")
 
@@ -38,13 +38,12 @@ with M.Timer().watch_and_report("python-rocksdb"):
     db.compact_range()
 
 
-from hugedict.hugedict import rocksdb
-
+from hugedict.rocksdb import Options, load
 
 with M.Timer().watch_and_report("rust-rocksdb"):
-    rocksdb.load(
+    load(
         str(bench_dir / "tempdir" / "rust-rocksdb.db"),
-        rocksdb.Options(create_if_missing=True),
+        Options(create_if_missing=True),
         infiles,
         format={
             "record_type": {"type": "tabsep", "key": None, "value": None},

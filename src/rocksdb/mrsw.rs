@@ -209,7 +209,7 @@ pub fn stop_primary_db(url: &str) -> Result<()> {
 
 /// A secondary instance of rocksdb that will communicate with the primary
 /// instance to write records to the database.
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 pub struct SecondaryDB {
     db: rocksdb::DB,
     socket: Socket,

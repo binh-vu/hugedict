@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use pyo3::{exceptions::PyAttributeError, prelude::*, types::PyDict};
-
 /// A general container to store attributes
 #[pyclass(subclass)]
 pub struct Container {
@@ -11,7 +10,7 @@ pub struct Container {
 #[pymethods]
 impl Container {
     #[new]
-    #[args(kwargs = "**")]
+    #[pyo3(signature = (**kwargs))]
     fn new(kwargs: Option<&PyDict>) -> PyResult<Container> {
         match kwargs {
             None => Ok(Self {

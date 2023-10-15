@@ -1,7 +1,7 @@
 from functools import partial
 from pathlib import Path
 
-from hugedict.hugedict.rocksdb import Options, SecondaryDB, primary_db, stop_primary_db
+from hugedict.core.rocksdb import Options, SecondaryDB, primary_db, stop_primary_db
 from hugedict.parallel import LazyDBCacheFn
 
 

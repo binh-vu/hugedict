@@ -9,7 +9,7 @@ use pyo3::{
 };
 use rocksdb::{self, DBIteratorWithThreadMode, DBRawIteratorWithThreadMode};
 
-#[pyclass(module = "hugedict.hugedict.rocksdb", subclass)]
+#[pyclass(module = "hugedict.core.rocksdb", subclass)]
 pub struct RocksDBDict {
     db: rocksdb::DB,
     path: PyObject,
@@ -22,7 +22,7 @@ pub struct RocksDBDict {
 #[pymethods]
 impl RocksDBDict {
     #[new]
-    #[args(readonly = "false", secondary_mode = "false", secondary_path = "None")]
+    #[pyo3(signature = (path, options, deser_key, deser_value, ser_value, readonly = false, secondary_mode = false, secondary_path = None))]
     pub fn new(
         py: Python,
         path: &str,
@@ -155,7 +155,7 @@ impl RocksDBDict {
         Ok(Py::new(py, it)?)
     }
 
-    #[args(default = "None")]
+    #[pyo3(signature = (key, default = None))]
     fn get(&self, py: Python, key: &PyAny, default: Option<Py<PyAny>>) -> PyResult<Py<PyAny>> {
         let dft = default.unwrap_or(py.None());
         convert_key!(self.impl_get_default(py ; key ; dft))
@@ -285,7 +285,7 @@ impl RocksDBDict {
         Ok(Py::new(py, it)?)
     }
 
-    #[args(start = "None", end = "None")]
+    #[pyo3(signature = (start = None, end = None))]
     fn compact(&self, start: Option<&PyAny>, end: Option<&PyAny>) -> PyResult<()> {
         match (start, end) {
             (None, None) => self.db.compact_range::<&[u8], &[u8]>(None, None),
@@ -474,7 +474,7 @@ pub fn extend_lifetime_it(
 }
 
 /// Careful with the declaration order! The iterator must be declared before the DB instance to ensure it is dropped before.
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 #[allow(unused)]
 struct DBKeyIterator {
     it: Box<DBRawIteratorWithThreadMode<'static, rocksdb::DB>>,
@@ -500,7 +500,7 @@ impl DBKeyIterator {
     }
 }
 
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 #[allow(unused)]
 struct DBPrefixKeyIterator {
     it: Box<DBIteratorWithThreadMode<'static, rocksdb::DB>>,
@@ -517,15 +517,16 @@ impl DBPrefixKeyIterator {
     fn __next__(mut slf: PyRefMut<'_, Self>, py: Python) -> PyResult<Option<PyObject>> {
         match slf.it.next() {
             None => Ok(None),
-            Some((k, _v)) => {
+            Some(Ok((k, _v))) => {
                 let next = pydeser_value(k, &slf.deser_key, py)?;
                 Ok(Some(next))
             }
+            Some(Err(e)) => Err(into_pyerr(e)),
         }
     }
 }
 
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 #[allow(unused)]
 struct DBValueIterator {
     it: Box<DBRawIteratorWithThreadMode<'static, rocksdb::DB>>,
@@ -551,7 +552,7 @@ impl DBValueIterator {
     }
 }
 
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 #[allow(unused)]
 struct DBItemIterator {
     it: Box<DBRawIteratorWithThreadMode<'static, rocksdb::DB>>,
@@ -580,7 +581,7 @@ impl DBItemIterator {
     }
 }
 
-#[pyclass(module = "hugedict.hugedict.rocksdb")]
+#[pyclass(module = "hugedict.core.rocksdb")]
 #[allow(unused)]
 struct DBPrefixItemIterator {
     it: Box<DBIteratorWithThreadMode<'static, rocksdb::DB>>,
@@ -598,11 +599,12 @@ impl DBPrefixItemIterator {
     fn __next__(mut slf: PyRefMut<'_, Self>, py: Python) -> PyResult<Option<(PyObject, PyObject)>> {
         match slf.it.next() {
             None => Ok(None),
-            Some((k, v)) => {
+            Some(Ok((k, v))) => {
                 let key = pydeser_value(k, &slf.deser_key, py)?;
                 let value = pydeser_value(v, &slf.deser_value, py)?;
                 Ok(Some((key, value)))
             }
+            Some(Err(e)) => Err(into_pyerr(e)),
         }
     }
 }

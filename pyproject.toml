@@ -33,6 +33,7 @@ Homepage = "https://github.com/binh-vu/hugedict"
 Repository = "https://github.com/binh-vu/hugedict"
 
 [tool.maturin]
+module-name = "hugedict.core"
 features = ["extension-module"]
 
 [build-system]

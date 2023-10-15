@@ -1,38 +1,35 @@
 from __future__ import annotations
-from contextlib import contextmanager
+
+import base64
 import enum
-from functools import partial
 import gc
 import gzip
+import pickle
+import shutil
+import subprocess
+import sys
+from contextlib import contextmanager
+from functools import partial
 from inspect import signature
 from multiprocessing import get_context
 from multiprocessing.pool import ThreadPool
 from operator import itemgetter
-import subprocess
 from pathlib import Path
-import pickle
-import shutil
-import sys
-from typing import Any, Callable, List, Literal, Optional, Union, MutableMapping, cast
+from typing import Any, Callable, List, Literal, MutableMapping, Optional, Union, cast
 from uuid import uuid4
-import base64
 
-from loguru import logger
 import orjson
+from loguru import logger
 from tqdm import tqdm
-from hugedict.types import F, Fn
+
 from hugedict.misc import (
     Chain2,
+    compress_pyobject,
     compress_zstd6_pyobject,
     decompress_zstd_pyobject,
-    compress_pyobject,
 )
-from hugedict.hugedict.rocksdb import (
-    Options,
-    RocksDBDict,
-    SecondaryDB,
-    stop_primary_db,
-)
+from hugedict.rocksdb import Options, RocksDBDict, SecondaryDB, stop_primary_db
+from hugedict.types import F, Fn
 
 
 class Compressing(enum.Flag):
@@ -426,7 +423,7 @@ class LazyDBCacheFn:
     ) -> subprocess.Popen:
         commands = [
             "import sys, json, base64, pickle",
-            "from hugedict.hugedict.rocksdb import primary_db",
+            "from hugedict.core.rocksdb import primary_db",
             "o = json.loads(sys.argv[1])",
             'primary_db(o["url"], o["dbpath"], pickle.loads(base64.b64decode(o["dbopts"])))',
         ]

@@ -1,12 +1,12 @@
 import os
 import shutil
-from typing import Generator
 from glob import glob
 from pathlib import Path
+from typing import Generator
 
 import pytest
 
-from hugedict.hugedict.rocksdb import load, Options
+from hugedict.rocksdb import Options, load
 
 
 @pytest.fixture()

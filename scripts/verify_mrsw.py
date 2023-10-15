@@ -1,10 +1,10 @@
-from functools import partial
+import sys
 import time
+from functools import partial
 from multiprocessing import Process, freeze_support
 from pathlib import Path
-from hugedict.hugedict.rocksdb import Options, SecondaryDB, primary_db, stop_primary_db
-import sys
 
+from hugedict.core.rocksdb import Options, SecondaryDB, primary_db, stop_primary_db
 
 bench_dir = Path(__file__).parent.parent / "benchmarks"
 dbpath = f"{bench_dir}/tempdir/rust-rocksdb.db"
