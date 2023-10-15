@@ -31,6 +31,7 @@ fn load_tabsep_unsorted() -> Result<()> {
         &FileFormat {
             record_type: RecordType::TabSep,
             is_sorted: false,
+            number_type: None,
         },
         true,
         true,
@@ -75,6 +76,7 @@ fn load_empty_file_ok() -> Result<()> {
         &FileFormat {
             record_type: RecordType::TabSep,
             is_sorted: false,
+            number_type: None,
         },
         true,
         true,
@@ -122,6 +124,7 @@ fn load_tuple2_correct_type() -> Result<()> {
                 value: None,
             },
             is_sorted: false,
+            number_type: Some(NumberType::F64),
         },
         true,
         true,
