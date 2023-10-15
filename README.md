@@ -53,3 +53,7 @@ def heavy_computing(seconds: float):
 
 output = pp.map(heavy_computing, [0.5, 1, 0.7, 0.3, 0.6], n_processes=3)
 ```
+
+4. Create dictionary backed by Sqlite: `hugedict.sqlite.SqliteDict`
+5. Chain multiple dictionaries: `hugedict.chained_mapping.ChainedMapping`
+6. Cache a dictionary so previously accessed keys are stored in memory: `hugedict.cachedict.CacheDict` or called `hugedict.types.HugeMapping.cache`
