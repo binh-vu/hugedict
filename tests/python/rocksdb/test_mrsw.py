@@ -20,12 +20,13 @@ def test_start_and_close_primary_db(wdprops: Path, url: str):
 
 def test_primary_secondary_db(wdprops: Path, url: str):
     p = LazyDBCacheFn._start_primary_db(url, str(wdprops), Options())
+    (wdprops / "secondaries").mkdir(parents=True, exist_ok=True)
 
     db0 = SecondaryDB(
         url,
         str(wdprops),
         str(wdprops / "secondaries/0"),
-        Options(),
+        Options(create_if_missing=True),
         deser_value=partial(str, encoding="utf-8"),
         ser_value=str.encode,
     )
