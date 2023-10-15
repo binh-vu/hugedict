@@ -12,3 +12,5 @@ Python APIs
     hugedict.core
     hugedict.parallel
     hugedict.prelude
+    hugedict.rocksdb
+    hugedict.sqlite

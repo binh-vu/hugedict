@@ -8,7 +8,7 @@ Installation
 
 |hugedict| is distributed on `PyPI <https://pypi.org/project/hugedict/>`_ so you can install with pip as below.
 
-.. code:: hugedict
+.. code:: bash
 
     pip install hugedict
 
@@ -50,12 +50,13 @@ Usage
 
     from functools import partial
     from hugedict.prelude import RocksDBDict, RocksDBOptions
+    # you can also import them from hugedict.rocksdb
 
     # replace [str, str] for the types of keys and values you want
     # as well as deser_key, deser_value, ser_value
     mapping: MutableMapping[str, str] = RocksDBDict(
         path=dbpath,  # path (str) to db file
-        options=RocksDBOptions(create_if_missing=create_if_missing),  # whether to create database if missing, check other options
+        options=RocksDBOptions(create_if_missing=create_if_missing),  # whether to create database if missing, check other options in hugedict.rocksdb.Options
         deser_key=partial(str, encoding="utf-8"),  # decode the key from memoryview
         deser_value=partial(str, encoding="utf-8"),  # decode the value from memoryview
         ser_value=str.encode,  # encode the value to bytes
@@ -87,3 +88,6 @@ Usage
     If the process start method is ``fork``, then you may encounter an error when running ``pp.map`` multiple times, change the start method to ``spawn`` will solve the error. The reason is that somehow in my test, ``with Pool()`` seems to fork from previous forked processes. As fork is not safe for libraries that use locks, the ``nng`` library throws an error saying it
     is not fork re-entrant safe.
 
+4. Create dictionary backed by Sqlite: :py:class:`hugedict.sqlite.SqliteDict`
+5. Chain multiple dictionaries: :py:class:`hugedict.chained_mapping.ChainedMapping`
+6. Cache a dictionary so previously accessed keys are stored in memory: :py:class:`hugedict.cachedict.CacheDict` or called :py:meth:`hugedict.types.HugeMapping.cache`
