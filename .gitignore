@@ -138,4 +138,4 @@ dmypy.json
 # Added by cargo
 
 /target
-hugedict/hugedict/rocksdb.py
+hugedict/core/rocksdb.py

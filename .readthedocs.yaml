@@ -8,7 +8,7 @@ build:
   jobs:
     pre_build:
       - cp CHANGELOG.md docs/source/changelog.md
-      - sed 's/\.\.\./pass/g' hugedict/hugedict/rocksdb.pyi > hugedict/hugedict/rocksdb.py
+      - sed 's/\.\.\./pass/g' hugedict/core/rocksdb.pyi > hugedict/core/rocksdb.py
 
 sphinx:
   configuration: docs/source/conf.py
