@@ -17,6 +17,9 @@ class ChainedMapping(Mapping[K, V]):
     def __iter__(self) -> Iterator[K]:
         return chain(iter(self.mapping1), iter(self.mapping2))
 
+    def values(self) -> Iterator[V]:
+        return chain(self.mapping1.values(), self.mapping2.values())
+
     def __len__(self):
         return len(self.mapping1) + len(self.mapping2)
 
