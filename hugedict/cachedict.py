@@ -1,4 +1,5 @@
 import os
+from copy import copy
 from typing import (
     Dict,
     ItemsView,
@@ -11,8 +12,8 @@ from typing import (
     Union,
     ValuesView,
 )
-from hugedict.types import K, V, CacheHugeMutableMapping
-from copy import copy
+
+from hugedict.types import CacheHugeMutableMapping, K, V
 
 
 class CacheDict(CacheHugeMutableMapping[K, V]):
@@ -58,7 +59,7 @@ class CacheDict(CacheHugeMutableMapping[K, V]):
             return self._cache[key]
         return self.mapping.get(key, default)
 
-    def cache(self) -> "CacheDict":
+    def cache(self) -> "CacheDict[K, V]":
         cache = CacheDict(self.mapping)
         # Return a clone of this object so that subsequence cache won't affect this object.
         cache._cache = copy(self._cache)
