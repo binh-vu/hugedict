@@ -142,3 +142,47 @@ fn load_tuple2_correct_type() -> Result<()> {
     );
     Ok(())
 }
+
+#[test]
+fn load_ndjson_correct_type() -> Result<()> {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/resources/ndjson");
+    let mut files = vec![];
+
+    for file in fs::read_dir(&dir)? {
+        let path = file?.path();
+        if path.extension().and_then(OsStr::to_str).unwrap_or("") != "jl" {
+            continue;
+        }
+        files.push(path);
+    }
+
+    let dir = tempdir()?;
+    let dbpath = dir.path();
+
+    let mut opts = Options::default();
+    opts.create_if_missing(true);
+
+    load(
+        dbpath,
+        &opts,
+        files.as_slice(),
+        &FileFormat {
+            record_type: RecordType::NDJson {
+                key: "id".to_string(),
+                value: Some("label".to_string()),
+            },
+            is_sorted: false,
+            number_type: Some(NumberType::F64),
+        },
+        true,
+        true,
+    )?;
+
+    let db = DB::open(&opts, dbpath)?;
+    assert_eq!(
+        vec![72, 117, 109, 97, 110],
+        db.get("Q5")?.unwrap_or(vec![0x00, 0x00, 0x00, 0x00, 0x00])
+    );
+    assert_eq!("Human", String::from_utf8(db.get("Q5")?.unwrap_or(vec![]))?);
+    Ok(())
+}

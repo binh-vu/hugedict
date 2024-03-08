@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.12.10] (2024-03-08)
+
+### Fixed
+
+- Fix RocksDBLoader for NDJson should not keep double quotes around string value (e.g., `"Human"` instead of `Human`).
+
 ## [2.4.0](https://github.com/binh-vu/hugedict/tree/2.4.0) (2022-08-02)
 
 [Full Changelog](https://github.com/binh-vu/hugedict/compare/2.3.3...2.4.0)

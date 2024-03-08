@@ -274,7 +274,7 @@ pub fn build_sst_file(
             }
         }
         (RecordType::NDJson { key, value }, false) => {
-            let mut kvs: Vec<(Vec<u8>, String)> = Vec::new();
+            let mut kvs: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
             let mut buffer = String::new();
 
             let keygetter = itemgetter(Some(key));
@@ -288,16 +288,43 @@ pub fn build_sst_file(
                     .as_ref()
                     .as_ref()
                     .into();
-                let v: String = match &value {
+                let v: Vec<u8> = match &value {
                     None => {
                         trim_newline(&mut buffer);
-                        buffer.clone()
+                        buffer.clone().into_bytes()
                     }
                     Some(_) => match valuegetter.get_item(&object) {
                         None => {
                             return Err(HugeDictError::ValueError(valueerror_msg.clone()).into())
                         }
-                        Some(o) => serde_json::to_string(o).expect("No bug in serde_json package"),
+                        Some(o) => match o {
+                            serde_json::Value::String(s) => s.as_bytes().to_vec(),
+                            serde_json::Value::Bool(s) => vec![*s as u8],
+                            // always use little endian so that the databases can move between platform without
+                            // rebuilt
+                            serde_json::Value::Number(s) => match &format.number_type {
+                                None => {
+                                    return Err(HugeDictError::InvalidFormat("Expect number_type to be specified as data contains numeric value").into());
+                                }
+                                Some(NumberType::F32) => {
+                                    (s.as_f64().unwrap() as f32).to_le_bytes().to_vec()
+                                }
+                                Some(NumberType::F64) => s.as_f64().unwrap().to_le_bytes().to_vec(),
+                                Some(NumberType::I32) => {
+                                    (s.as_i64().unwrap() as i32).to_le_bytes().to_vec()
+                                }
+                                Some(NumberType::I64) => s.as_i64().unwrap().to_le_bytes().to_vec(),
+                                Some(NumberType::U32) => {
+                                    (s.as_u64().unwrap() as u32).to_le_bytes().to_vec()
+                                }
+                                Some(NumberType::U64) => s.as_u64().unwrap().to_le_bytes().to_vec(),
+                            },
+                            serde_json::Value::Null => vec![],
+                            _ => serde_json::to_string(o)
+                                .expect("No bug in serde_json package")
+                                .as_bytes()
+                                .to_vec(),
+                        },
                     },
                 };
 
@@ -324,6 +351,7 @@ pub fn build_sst_file(
                     .as_ref()
                     .as_ref()
                     .into();
+
                 match &value {
                     None => {
                         trim_newline(&mut buffer);
@@ -334,10 +362,53 @@ pub fn build_sst_file(
                             return Err(HugeDictError::ValueError(valueerror_msg.clone()).into());
                         }
                         Some(o) => {
-                            writer.put(
-                                k,
-                                serde_json::to_string(o).expect("No bug in serde_json package"),
-                            )?;
+                            match o {
+                                serde_json::Value::String(s) => {
+                                    writer.put(k, s.as_bytes())?;
+                                }
+                                serde_json::Value::Bool(s) => {
+                                    writer.put(k, &[*s as u8])?;
+                                }
+                                // always use little endian so that the databases can move between platform without
+                                // rebuilt
+                                serde_json::Value::Number(s) => match &format.number_type {
+                                    None => {
+                                        return Err(HugeDictError::InvalidFormat("Expect number_type to be specified as data contains numeric value").into());
+                                    }
+                                    Some(NumberType::F32) => {
+                                        writer
+                                            .put(k, (s.as_f64().unwrap() as f32).to_le_bytes())?;
+                                    }
+                                    Some(NumberType::F64) => {
+                                        writer.put(k, s.as_f64().unwrap().to_le_bytes())?;
+                                    }
+                                    Some(NumberType::I32) => {
+                                        writer
+                                            .put(k, (s.as_i64().unwrap() as i32).to_le_bytes())?;
+                                    }
+                                    Some(NumberType::I64) => {
+                                        writer.put(k, s.as_i64().unwrap().to_le_bytes())?;
+                                    }
+                                    Some(NumberType::U32) => {
+                                        writer
+                                            .put(k, (s.as_u64().unwrap() as u32).to_le_bytes())?;
+                                    }
+                                    Some(NumberType::U64) => {
+                                        writer.put(k, s.as_u64().unwrap().to_le_bytes())?;
+                                    }
+                                },
+                                serde_json::Value::Null => {
+                                    writer.put(k, &[])?;
+                                }
+                                _ => {
+                                    writer.put(
+                                        k,
+                                        serde_json::to_string(o)
+                                            .expect("No bug in serde_json package")
+                                            .as_bytes(),
+                                    )?;
+                                }
+                            };
                         }
                     },
                 };
