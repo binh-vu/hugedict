@@ -15,6 +15,7 @@ from hugedict.cachedict import CacheDict
 from hugedict.types import F, HugeMutableMapping, V
 
 SqliteKey = TypeVar("SqliteKey", bound=Union[str, int, bytes])
+TupleValue = TypeVar("TupleValue", bound=tuple)
 
 
 class SqliteDictFieldType(str, Enum):
@@ -38,8 +39,8 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         self,
         path: Union[str, Path],
         keytype: SqliteDictFieldType,
-        ser_value: Callable[[V], bytes] | Callable[[V], V],
-        deser_value: Callable[[bytes], V] | Callable[[V], V],
+        ser_value: Callable[[V], bytes],
+        deser_value: Callable[[bytes], V],
         valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes,
         timeout: float = 5.0,
     ):
@@ -223,3 +224,26 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
             return fn
 
         return wrapper_fn  # type: ignore
+
+
+class SqliteDictTuple(HugeMutableMapping[SqliteKey, TupleValue]):
+    def __init__(
+        self,
+        path: Union[str, Path],
+        keytype: SqliteDictFieldType,
+        ser_value: Callable[[TupleValue], bytes],
+        deser_value: Callable[[bytes], TupleValue],
+        valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes,
+        timeout: float = 5.0,
+    ):
+        self.dbfile = Path(path)
+        need_init = not self.dbfile.exists()
+        self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
+        if need_init:
+            with self.db:
+                self.db.execute(
+                    f"CREATE TABLE data(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
+                )
+
+        self.ser_value = ser_value
+        self.deser_value = deser_value

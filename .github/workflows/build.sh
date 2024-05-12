@@ -55,8 +55,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
     else
         # centos
         # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
-        yum install -y llvm-toolset-7
-        source /opt/rh/llvm-toolset-7/enable
+        yum install -y llvm-toolset-7.0
+        source /opt/rh/llvm-toolset-7.0/enable
     fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Skip on MacOS. Assuming you have CLang and LLVM installed."    

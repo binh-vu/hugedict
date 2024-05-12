@@ -436,7 +436,7 @@ pub fn pydeser_value<V: AsRef<[u8]>>(val: V, deser: &Py<PyAny>, py: Python) -> P
     let v = unsafe {
         let p = val.as_ref();
         let mv = pyo3::ffi::PyMemoryView_FromMemory(
-            p.as_ptr() as *mut i8,
+            p.as_ptr() as *mut std::os::raw::c_char,
             p.len() as isize,
             pyo3::ffi::PyBUF_READ,
         );

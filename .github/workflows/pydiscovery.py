@@ -1,5 +1,9 @@
 from __future__ import print_function
-import os, subprocess, re, argparse
+
+import argparse
+import os
+import re
+import subprocess
 from typing import Tuple
 
 
