@@ -3,10 +3,22 @@ from __future__ import annotations
 import functools
 import pickle
 import sqlite3
+from dataclasses import dataclass
 from enum import Enum
 from inspect import signature
 from pathlib import Path
-from typing import Any, Callable, Iterable, Iterator, Optional, Tuple, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    Iterator,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
 
 import orjson
 from timer import Timer
@@ -15,13 +27,27 @@ from hugedict.cachedict import CacheDict
 from hugedict.types import F, HugeMutableMapping, V
 
 SqliteKey = TypeVar("SqliteKey", bound=Union[str, int, bytes])
-TupleValue = TypeVar("TupleValue", bound=tuple)
+V1 = TypeVar("V1")
+V2 = TypeVar("V2")
+V3 = TypeVar("V3")
+
+DEFAULT_TIMEOUT = 5.0
 
 
 class SqliteDictFieldType(str, Enum):
     str = "TEXT"
     int = "INTEGER"
     bytes = "BLOB"
+
+
+@dataclass
+class SqliteDictArgs(Generic[V]):
+    tablename: str
+    keytype: SqliteDictFieldType
+    ser_value: Callable[[V], bytes]
+    deser_value: Callable[[bytes], V]
+    valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes
+    timeout: float = DEFAULT_TIMEOUT
 
 
 class SqliteDict(HugeMutableMapping[SqliteKey, V]):
@@ -37,21 +63,29 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
 
     def __init__(
         self,
-        path: Union[str, Path],
+        path: Union[str, Path, sqlite3.Connection],
         keytype: SqliteDictFieldType,
         ser_value: Callable[[V], bytes],
         deser_value: Callable[[bytes], V],
         valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes,
-        timeout: float = 5.0,
+        timeout: float = DEFAULT_TIMEOUT,
+        table_name: str = "data",
     ):
-        self.dbfile = Path(path)
-        need_init = not self.dbfile.exists()
-        self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
-        if need_init:
-            with self.db:
-                self.db.execute(
-                    f"CREATE TABLE data(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
-                )
+        if isinstance(path, (str, Path)):
+            self.dbfile = Path(path)
+            self.table_name = table_name
+            need_init = not self.dbfile.exists()
+            self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
+            if need_init:
+                with self.db:
+                    self.db.execute(
+                        f"CREATE TABLE {self.table_name}(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
+                    )
+        else:
+            assert isinstance(
+                path, sqlite3.Connection
+            ), f"path must be a str, Path, or Connection but get {type(path)}"
+            self.db = path
 
         self.ser_value = ser_value
         self.deser_value = deser_value
@@ -72,17 +106,68 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
     ) -> SqliteDict[str, V]:
         return SqliteDict(path, SqliteDictFieldType.int, ser_value, deser_value)
 
+    @staticmethod
+    def mul2(
+        path: Union[str, Path],
+        args1: SqliteDictArgs[V1],
+        args2: SqliteDictArgs[V2],
+    ) -> tuple[SqliteDict[str, V1], SqliteDict[str, V2]]:
+        d1, d2 = SqliteDict.multiple(path, args1, args2)
+        return d1, d2
+
+    @staticmethod
+    def mul3(
+        path: Union[str, Path],
+        args1: SqliteDictArgs[V1],
+        args2: SqliteDictArgs[V2],
+        args3: SqliteDictArgs[V3],
+    ) -> tuple[SqliteDict[str, V1], SqliteDict[str, V2], SqliteDict[str, V3]]:
+        d1, d2, d3 = SqliteDict.multiple(path, args1, args2, args3)
+        return d1, d2, d3
+
+    @staticmethod
+    def multiple(
+        path: Union[str, Path],
+        *args: SqliteDictArgs[Any],
+    ) -> tuple[SqliteDict[str, Any], ...]:
+        dbfile = Path(path)
+        need_init = not dbfile.exists()
+        timeout = max(a.timeout for a in args)
+        db = sqlite3.connect(str(dbfile), timeout=timeout)
+        if need_init:
+            with db:
+                for a in args:
+                    db.execute(
+                        f"CREATE TABLE {a.tablename}(key {a.keytype.value} PRIMARY KEY, value {a.valuetype.value})"
+                    )
+
+        out = []
+        for a in args:
+            out.append(
+                SqliteDict(
+                    path=db,
+                    keytype=a.keytype,
+                    ser_value=a.ser_value,
+                    deser_value=a.deser_value,
+                    valuetype=a.valuetype,
+                    timeout=a.timeout,
+                    table_name=a.tablename,
+                )
+            )
+        return tuple(out)
+
     def __contains__(self, key: SqliteKey):
         return (
             self.db.execute(
-                "SELECT EXISTS ( SELECT 1 FROM data WHERE key = ? LIMIT 1)", (key,)
+                f"SELECT EXISTS ( SELECT 1 FROM {self.table_name} WHERE key = ? LIMIT 1)",
+                (key,),
             ).fetchone()[0]
             == 1
         )
 
     def __getitem__(self, key: SqliteKey) -> V:
         record = self.db.execute(
-            "SELECT value FROM data WHERE key = ?", (key,)
+            f"SELECT value FROM {self.table_name} WHERE key = ?", (key,)
         ).fetchone()
         if record is None:
             raise KeyError(key)
@@ -91,38 +176,40 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
     def __setitem__(self, key: SqliteKey, value: V):
         with self.db:
             self.db.execute(
-                "INSERT INTO data VALUES (:key, :value) ON CONFLICT(key) DO UPDATE SET value = :value",
+                f"INSERT INTO {self.table_name} VALUES (:key, :value) ON CONFLICT(key) DO UPDATE SET value = :value",
                 {"key": key, "value": self.ser_value(value)},
             )
 
     def __delitem__(self, key: SqliteKey) -> None:
         with self.db:
-            self.db.execute("DELETE FROM data WHERE key = ?", (key,))
+            self.db.execute(f"DELETE FROM {self.table_name} WHERE key = ?", (key,))
 
     def __iter__(self) -> Iterator[SqliteKey]:
-        return (key[0] for key in self.db.execute("SELECT key FROM data"))
+        return (key[0] for key in self.db.execute(f"SELECT key FROM {self.table_name}"))
 
     def __len__(self) -> int:
-        return self.db.execute("SELECT COUNT(*) FROM data").fetchone()[0]
+        return self.db.execute(f"SELECT COUNT(*) FROM {self.table_name}").fetchone()[0]
 
     def keys(self) -> Iterator[SqliteKey]:
-        return (key[0] for key in self.db.execute("SELECT key FROM data"))
+        return (key[0] for key in self.db.execute(f"SELECT key FROM {self.table_name}"))
 
     def values(self) -> Iterator[V]:
         return (
             self.deser_value(value[0])
-            for value in self.db.execute("SELECT value FROM data")
+            for value in self.db.execute(f"SELECT value FROM {self.table_name}")
         )
 
     def items(self) -> Iterator[Tuple[SqliteKey, V]]:
         return (
             (key, self.deser_value(value))
-            for key, value in self.db.execute("SELECT key, value FROM data")
+            for key, value in self.db.execute(
+                f"SELECT key, value FROM {self.table_name}"
+            )
         )
 
     def get(self, key: SqliteKey, default=None):
         record = self.db.execute(
-            "SELECT value FROM data WHERE key = ?", (key,)
+            f"SELECT value FROM {self.table_name} WHERE key = ?", (key,)
         ).fetchone()
         if record is None:
             return default
@@ -131,7 +218,7 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
     def batch_insert(self, items: Iterable[Tuple[SqliteKey, V]]):
         with self.db:
             self.db.executemany(
-                "INSERT INTO data VALUES (:key, :value) ON CONFLICT(key) DO UPDATE SET value = :value",
+                f"INSERT INTO {self.table_name} VALUES (:key, :value) ON CONFLICT(key) DO UPDATE SET value = :value",
                 [{"key": key, "value": self.ser_value(value)} for key, value in items],
             )
 
@@ -224,26 +311,3 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
             return fn
 
         return wrapper_fn  # type: ignore
-
-
-class SqliteDictTuple(HugeMutableMapping[SqliteKey, TupleValue]):
-    def __init__(
-        self,
-        path: Union[str, Path],
-        keytype: SqliteDictFieldType,
-        ser_value: Callable[[TupleValue], bytes],
-        deser_value: Callable[[bytes], TupleValue],
-        valuetype: SqliteDictFieldType = SqliteDictFieldType.bytes,
-        timeout: float = 5.0,
-    ):
-        self.dbfile = Path(path)
-        need_init = not self.dbfile.exists()
-        self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
-        if need_init:
-            with self.db:
-                self.db.execute(
-                    f"CREATE TABLE data(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
-                )
-
-        self.ser_value = ser_value
-        self.deser_value = deser_value

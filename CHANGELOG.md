@@ -1,12 +1,18 @@
 # Changelog
 
-## [2.12.10] (2024-03-08)
+## [2.13.0] - 2024-05-20
+
+### Added
+
+- Support multiple SqliteDict in a single dbfile
+
+## [2.12.10] - 2024-03-08
 
 ### Fixed
 
 - Fix RocksDBLoader for NDJson should not keep double quotes around string value (e.g., `"Human"` instead of `Human`).
 
-## [2.4.0](https://github.com/binh-vu/hugedict/tree/2.4.0) (2022-08-02)
+## [2.4.0](https://github.com/binh-vu/hugedict/tree/2.4.0) - 2022-08-02
 
 [Full Changelog](https://github.com/binh-vu/hugedict/compare/2.3.3...2.4.0)
 
@@ -19,7 +25,7 @@
 
 - \[mrsw\] Invalid address when the URL is too long [\#8](https://github.com/binh-vu/hugedict/issues/8)
 
-## [2.3.3](https://github.com/binh-vu/hugedict/tree/2.3.3) (2022-07-31)
+## [2.3.3](https://github.com/binh-vu/hugedict/tree/2.3.3) - 2022-07-31
 
 [Full Changelog](https://github.com/binh-vu/hugedict/compare/2.3.2...2.3.3)
 

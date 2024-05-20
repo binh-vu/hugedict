@@ -57,7 +57,7 @@ class TestSqliteDict(TestMutableMappingSuite):
 
         # start a new process and write a new key
         commands = [
-            "from hugedict.sqlitedict import SqliteDict",
+            "from hugedict.sqlite import SqliteDict",
             f"map = SqliteDict.str('{str(mapping.dbfile.absolute())}', ser_value=str.encode, deser_value=bytes.decode)",
             f"nkey = '{nkey}'",
             f"nvalue = '{nvalue}'",
