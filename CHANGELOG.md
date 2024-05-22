@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.13.2] - 2024-05-22
+
+### Fixed
+
+- Update type annotation
+
 ## [2.13.1] - 2024-05-21
 
 ### Fixed
