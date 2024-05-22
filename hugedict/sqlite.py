@@ -71,9 +71,9 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         timeout: float = DEFAULT_TIMEOUT,
         table_name: str = "data",
     ):
+        self.table_name = table_name
         if isinstance(path, (str, Path)):
             self.dbfile = Path(path)
-            self.table_name = table_name
             need_init = not self.dbfile.exists()
             self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
             if need_init:

@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.13.1] - 2024-05-21
+
+### Fixed
+
+- Fix missing `table_name` attribute in `hugedict.sqlite.SqliteDict`
+
 ## [2.13.0] - 2024-05-20
 
 ### Added
