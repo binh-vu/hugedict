@@ -207,7 +207,7 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
             )
         )
 
-    def get(self, key: SqliteKey, default: Optional[V] = None) -> Optional[V]:
+    def get(self, key: SqliteKey, default: V1 = None) -> V | V1:
         record = self.db.execute(
             f"SELECT value FROM {self.table_name} WHERE key = ?", (key,)
         ).fetchone()
