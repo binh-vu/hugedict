@@ -225,6 +225,10 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
     def cache(self) -> CacheDict:
         return CacheDict(self)
 
+    def clear(self):
+        with self.db:
+            self.db.execute(f"DELETE FROM {self.table_name}")
+
     @staticmethod
     def cache_fn(
         ser: Callable[[Any], bytes] = pickle.dumps,

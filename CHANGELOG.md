@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.13.4] - 2024-05-28
+
+### Added
+
+- Efficient implementation of `hugedict.sqlite.Sqlite.clear` method
+
 ## [2.13.3] - 2024-05-22
 
 ### Fixed
