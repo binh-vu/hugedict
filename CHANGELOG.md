@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.14.0] - 2024-07-20
+
+### Added
+
+- Support building rocksdb from zstd compressed data
+
 ## [2.13.4] - 2024-05-28
 
 ### Added

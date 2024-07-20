@@ -171,6 +171,7 @@ pub fn build_sst_file(
     let stream: Box<dyn Read> = match infile.extension().and_then(OsStr::to_str) {
         Some("gz") => Box::new(GzDecoder::new(fs::File::open(infile)?)),
         Some("bz2") => Box::new(MultiBzDecoder::new(fs::File::open(infile)?)),
+        Some("zst") => Box::new(zstd::stream::read::Decoder::new(fs::File::open(infile)?)?),
         _ => Box::new(fs::File::open(infile)?),
     };
     let mut reader = BufReader::new(stream);
