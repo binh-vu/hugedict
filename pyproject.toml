@@ -1,6 +1,6 @@
 [project]
 name = "hugedict"
-version = "2.14.0"
+version = "2.14.1"
 authors = [{ name = "Binh Vu", email = "binh@toan2.com" }]
 description = "A dictionary-like object that is friendly with multiprocessing and uses key-value databases (e.g., RocksDB) as the underlying storage."
 readme = "README.md"

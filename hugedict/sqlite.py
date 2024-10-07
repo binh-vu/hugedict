@@ -74,13 +74,15 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         self.table_name = table_name
         if isinstance(path, (str, Path)):
             self.dbfile = Path(path)
-            need_init = not self.dbfile.exists()
+            init_marker = self.dbfile.parent / (self.dbfile.name + ".inited")
+            need_init = not init_marker.exists()
             self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
             if need_init:
                 with self.db:
                     self.db.execute(
-                        f"CREATE TABLE {self.table_name}(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
+                        f"CREATE TABLE IF NOT EXISTS {self.table_name}(key {keytype.value} PRIMARY KEY, value {valuetype.value})"
                     )
+                init_marker.touch()
         else:
             assert isinstance(
                 path, sqlite3.Connection
