@@ -89,7 +89,7 @@ jobs:
         with:
           name: wheels-manylinux
       - name: list artifacts (1)
-        run: ls -l dist
+        run: ls -l 
       - uses: actions/download-artifact@v4
         with:
           name: wheels-ubuntu-22.04
@@ -100,7 +100,7 @@ jobs:
         with:
           name: wheels-windows-2022
       - name: list artifacts (2)
-        run: ls -l dist
+        run: ls -l
       - name: Publish to PyPI
         uses: messense/maturin-action@v1
         env:
