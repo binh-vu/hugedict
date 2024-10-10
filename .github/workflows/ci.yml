@@ -88,23 +88,23 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: wheels-manylinux
-      - name: list artifacts (1)
-        run: ls -l 
+          path: dist
       - uses: actions/download-artifact@v4
         with:
           name: wheels-ubuntu-22.04
+          path: dist
       - uses: actions/download-artifact@v4
         with:
           name: wheels-macos-12
+          path: dist
       - uses: actions/download-artifact@v4
         with:
           name: wheels-windows-2022
-      - name: list artifacts (2)
-        run: ls -l
-      - name: Publish to PyPI
-        uses: messense/maturin-action@v1
+          path: dist
+      - name: release
+        run: |
+          pip install twine
+          twine upload --skip-existing dist/* -u $PYPI_USER -p $PYPI_PWD
         env:
-          MATURIN_PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
-        with:
-          command: upload
-          args: --skip-existing *
+          PYPI_USER: __token__
+          PYPI_PWD: ${{ secrets.PYPI_TOKEN }}
