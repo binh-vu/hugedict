@@ -103,7 +103,7 @@ jobs:
           path: dist
       - name: release
         run: |
-          pip install twine
+          apt install -y python3-twine
           twine upload --skip-existing dist/* -u $PYPI_USER -p $PYPI_PWD
         env:
           PYPI_USER: __token__
