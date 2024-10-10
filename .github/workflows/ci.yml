@@ -53,7 +53,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-${{ matrix.platform }}
           path: dist
 
   build-manylinux:
@@ -76,7 +76,7 @@ jobs:
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels
+          name: wheels-manylinux
           path: dist
 
   release:
@@ -87,7 +87,20 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheels
+          name: wheels-manylinux
+      - name: list artifacts (1)
+        run: ls -l dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-ubuntu-22.04
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-12
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-windows-2022
+      - name: list artifacts (2)
+        run: ls -l dist
       - name: Publish to PyPI
         uses: messense/maturin-action@v1
         env:
