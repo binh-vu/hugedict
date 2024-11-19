@@ -1,9 +1,8 @@
 set -ex
 
-#
-# This script is used to build aarch64 binary as Github does not supported it yet
-# you run it in the root of the project
 
+echo "This script is used to build aarch64 binary as Github does not supported it yet"
+echo "You need to run it in the root of the project"
 
 if [ -d "$(pwd)/dist" ]; then
     rm -r $(pwd)/dist
