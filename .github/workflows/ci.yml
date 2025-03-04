@@ -8,7 +8,7 @@ jobs:
   build:
     strategy:
       matrix:
-        platform: ["ubuntu-22.04", "macos-12", "windows-2022"]
+        platform: ["ubuntu-22.04", "macos-15", "windows-2022"]
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v3
@@ -83,7 +83,7 @@ jobs:
     name: Release PyPI.org
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
-    needs: [build]
+    needs: [build, build-manylinux]
     steps:
       - uses: actions/download-artifact@v4
         with:
@@ -95,7 +95,7 @@ jobs:
           path: dist
       - uses: actions/download-artifact@v4
         with:
-          name: wheels-macos-12
+          name: wheels-macos-15
           path: dist
       - uses: actions/download-artifact@v4
         with:
