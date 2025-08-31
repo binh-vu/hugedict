@@ -32,7 +32,7 @@ jobs:
             ~/.cargo  
             target
       - name: Run Cargo test
-        if: "startsWith(matrix.platform, 'ubuntu')"
+        if: ${{ startsWith(matrix.platform, 'ubuntu') }}
         run: cargo test --no-default-features --features pyo3/auto-initialize
       - uses: messense/maturin-action@v1
         env:
@@ -44,7 +44,7 @@ jobs:
             --release ${{ startsWith(matrix.platform, 'ubuntu') && '--sdist' || '' }}
             ${{ startsWith(matrix.platform, 'macos') && '--target universal2-apple-darwin' || '' }}
       - name: Run Python test
-        if: "!startsWith(matrix.platform, 'windows')"
+        if: ${{ !startsWith(matrix.platform, 'windows') }}
         run: |
           python -c "import subprocess, glob, os; file = glob.glob(os.path.join('dist', '*cp38*.whl'))[0]; subprocess.check_output(['pip', 'install', file])"
           pip install pytest
