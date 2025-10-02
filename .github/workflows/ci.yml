@@ -16,6 +16,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: |
+            3.13
             3.12
             3.11
             3.10
@@ -56,7 +57,7 @@ jobs:
           name: wheels-${{ matrix.platform }}
           path: dist
 
-  build-manylinux:
+  build-manylinux-x86_64:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -71,23 +72,49 @@ jobs:
             -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
             -e PYTHON_HOME=/opt/python \
             -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
-            quay.io/pypa/manylinux2014_x86_64:latest \
+            quay.io/pypa/manylinux_2_34_x86_64:latest \
             bash /project/.github/workflows/build.sh -t x86_64-unknown-linux-gnu
       - name: Upload wheels
         uses: actions/upload-artifact@v4
         with:
-          name: wheels-manylinux
+          name: wheels-manylinux-x86_64
+          path: dist
+  build-manylinux-aarch64:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v3
+      - name: Cache Rust target directory
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-manylinux
+          path: target
+      - name: Build wheels
+        run: |
+          docker run --rm -w /project -v $(pwd):/project \
+            -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
+            -e PYTHON_HOME=/opt/python \
+            -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
+            quay.io/pypa/manylinux_2_34_aarch64:latest \
+            bash /project/.github/workflows/build.sh -t aarch64-unknown-linux-gnu
+      - name: Upload wheels
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-manylinux-aarch64
           path: dist
 
   release:
     name: Release PyPI.org
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/') || startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/dev-ci')
-    needs: [build, build-manylinux]
+    needs: [build, build-manylinux-x86_64, build-manylinux-aarch64]
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: wheels-manylinux
+          name: wheels-manylinux-x86_64
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-manylinux-aarch64
           path: dist
       - uses: actions/download-artifact@v4
         with:

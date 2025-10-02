@@ -6,7 +6,7 @@ set -e
 # The script needs yum or apt
 #
 # Envionment Arguments: (handled by `args.py`)
-#   PYTHON_HOME: the path to the Python installation, which will be used to build the wheels for. 
+#   PYTHON_ROOT_DIR: path to the Python installation. This is used to find the Python interpreters.
 # Arguments:
 #   -t <target>: target platform. See https://doc.rust-lang.org/nightly/rustc/platform-support.html
 
@@ -27,21 +27,6 @@ then
     exit 1
 fi
 
-# ##############################################
-echo "::group::Discovering Python"
-TMP=$(python $SCRIPT_DIR/pydiscovery.py --min-version 3.8 --root-dir $PYTHON_HOME)
-PYTHON_EXECS=($TMP)
-if [ ${#PYTHON_EXECS[@]} -eq 0 ]; then
-    echo "No Python found. Did you forget to set any environment variable PYTHON_HOME?"
-else
-    for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
-    do
-        echo "Found $PYTHON_EXEC"
-    done    
-fi
-echo "::endgroup::"
-echo
-
 echo "::group::Setup build tools"
 # ##############################################
 # to build rocksdb, we need CLang and LLVM
@@ -53,10 +38,8 @@ if [[ "$OSTYPE" == "linux-gnu"* ]]; then
         apt update
         apt install -y clang-11
     else
-        # centos
-        # https://developers.redhat.com/blog/2018/07/07/yum-install-gcc7-clang#
-        yum install -y llvm-toolset-7.0
-        source /opt/rh/llvm-toolset-7.0/enable
+        # almalinux
+        yum install -y llvm-toolset
     fi
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "Skip on MacOS. Assuming you have CLang and LLVM installed."    
@@ -95,13 +78,27 @@ else
 fi
 
 # ##############################################
-for PYTHON_EXEC in "${PYTHON_EXECS[@]}"
-do
-    echo "::group::Building for Python $PYTHON_EXEC"
+echo "::group::Discovering Python"
+pip install wherepy  # to find local Python interpreters
+IFS=':' read -a PYTHON_INTERPRETERS < <(python -m wherepy --minimum-version 3.10 --return-execpath --search-dir "$PYTHON_ROOT_DIR")
+if [ ${#PYTHON_INTERPRETERS[@]} -eq 0 ]; then
+    echo "No Python found. Did you forget to set the environment variable PYTHON_ROOT_DIR?"
+else
+    for PYTHON_INTERPRETER in "${PYTHON_INTERPRETERS[@]}"
+    do
+        echo "Found $PYTHON_INTERPRETER"
+    done
+fi
+echo "::endgroup::"
+echo
 
-    echo "Run: maturin build -r -o dist -i $PYTHON_EXEC --target $target"
-    "maturin" build -r -o dist -i "$PYTHON_EXEC" --target $target
+# ##############################################
+PYTHON_INTERPRETERS_JOINED=$(IFS=' ' ; echo "${PYTHON_INTERPRETERS[*]/#/-i }")
 
-    echo "::endgroup::"
-    echo
-done
+echo "::group::Building for Python ${PYTHON_INTERPRETERS[@]}"
+
+echo "Run: maturin build -r -o dist $PYTHON_INTERPRETERS_JOINED --target $target"
+maturin build -r -o dist $PYTHON_INTERPRETERS_JOINED --target $target
+
+echo "::endgroup::"
+echo
