@@ -24,7 +24,8 @@ jobs:
             3.8
       - name: Discover python
         run: |
-          echo "PYTHONS=$(python .github/workflows/pydiscovery.py --min-version 3.8 --delimiter ' ' --root-dir ${{ runner.tool_cache }}/Python)" >> "$GITHUB_ENV"
+          pip install wherepy
+          echo "PYTHONS=$(python -m wherepy --minimum-version 3.8 --delimiter ' ' --return-execpath --search-dir ${{ runner.tool_cache }}/Python)" >> "$GITHUB_ENV"
       - name: Cache Rust target directory
         uses: actions/cache@v3
         with:
