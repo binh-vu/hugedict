@@ -67,6 +67,8 @@ jobs:
         with:
           key: ${{ runner.os }}-manylinux-x86_64
           path: target
+      - name: Download build script
+        run: curl -o .github/workflows/build.sh https://gist.githubusercontent.com/binh-vu/37957e6ea82e335c22559832dd98a97e/raw/add7d14b7c9524f4e21789283ade84d70d3a2dcc/build.sh
       - name: Build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
@@ -90,6 +92,8 @@ jobs:
         with:
           key: ${{ runner.os }}-manylinux-aarch64
           path: target
+      - name: Download build script
+        run: curl -o .github/workflows/build.sh https://gist.githubusercontent.com/binh-vu/37957e6ea82e335c22559832dd98a97e/raw/add7d14b7c9524f4e21789283ade84d70d3a2dcc/build.sh
       - name: Build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
