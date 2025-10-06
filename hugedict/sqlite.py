@@ -74,6 +74,7 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
         self.table_name = table_name
         if isinstance(path, (str, Path)):
             self.dbfile = Path(path)
+            self.dbfile.parent.mkdir(parents=True, exist_ok=True)
             init_marker = self.dbfile.parent / (self.dbfile.name + ".inited")
             need_init = not init_marker.exists()
             try:
