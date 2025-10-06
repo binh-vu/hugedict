@@ -6,6 +6,7 @@ set -e
 # The script needs yum or apt
 #
 # Envionment Arguments: (handled by `args.py`)
+#   PYTHON_MIN_VERSION: minimum Python version to build for. This is used to find the Python interpreters.
 #   PYTHON_ROOT_DIR: path to the Python installation. This is used to find the Python interpreters.
 # Arguments:
 #   -t <target>: target platform. See https://doc.rust-lang.org/nightly/rustc/platform-support.html
