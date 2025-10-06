@@ -80,7 +80,7 @@ fi
 # ##############################################
 echo "::group::Discovering Python"
 pip install wherepy  # to find local Python interpreters
-IFS=':' read -a PYTHON_INTERPRETERS < <(python -m wherepy --minimum-version 3.10 --return-execpath --search-dir "$PYTHON_ROOT_DIR")
+IFS=':' read -a PYTHON_INTERPRETERS < <(python -m wherepy --minimum-version "$PYTHON_MIN_VERSION" --return-execpath --search-dir "$PYTHON_ROOT_DIR")
 if [ ${#PYTHON_INTERPRETERS[@]} -eq 0 ]; then
     echo "No Python found. Did you forget to set the environment variable PYTHON_ROOT_DIR?"
 else

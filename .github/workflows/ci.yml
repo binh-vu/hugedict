@@ -65,13 +65,14 @@ jobs:
       - name: Cache Rust target directory
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-manylinux
+          key: ${{ runner.os }}-manylinux-x86_64
           path: target
       - name: Build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
             -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
-            -e PYTHON_HOME=/opt/python \
+            -e PYTHON_ROOT_DIR=/opt/python \
+            -e PYTHON_MIN_VERSION=3.8 \
             -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
             quay.io/pypa/manylinux_2_34_x86_64:latest \
             bash /project/.github/workflows/build.sh -t x86_64-unknown-linux-gnu
@@ -87,13 +88,14 @@ jobs:
       - name: Cache Rust target directory
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-manylinux
+          key: ${{ runner.os }}-manylinux-aarch64
           path: target
       - name: Build wheels
         run: |
           docker run --rm -w /project -v $(pwd):/project \
             -e EXTRA_PATH=/opt/python/cp38-cp38/bin \
-            -e PYTHON_HOME=/opt/python \
+            -e PYTHON_ROOT_DIR=/opt/python \
+            -e PYTHON_MIN_VERSION=3.8 \
             -e CARGO_NET_GIT_FETCH_WITH_CLI=false \
             quay.io/pypa/manylinux_2_34_aarch64:latest \
             bash /project/.github/workflows/build.sh -t aarch64-unknown-linux-gnu
