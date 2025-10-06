@@ -76,7 +76,12 @@ class SqliteDict(HugeMutableMapping[SqliteKey, V]):
             self.dbfile = Path(path)
             init_marker = self.dbfile.parent / (self.dbfile.name + ".inited")
             need_init = not init_marker.exists()
-            self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
+            try:
+                self.db = sqlite3.connect(str(self.dbfile), timeout=timeout)
+            except sqlite3.OperationalError as e:
+                raise sqlite3.OperationalError(
+                    f"Failed to connect to {self.dbfile}. If the file is on a network file system, please copy it to a local disk and try again."
+                ) from e
             if need_init:
                 with self.db:
                     self.db.execute(
